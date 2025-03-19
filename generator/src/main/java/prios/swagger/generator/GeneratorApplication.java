@@ -245,7 +245,7 @@ class SwaggerController {
                 swaggerProperty += "          type: boolean\n          description: " + description + "\n          example: 'true'\n";
                 break;
             case "String":
-                swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: 'Sample String'\n";
+                swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: '" + generateStringExample(fieldName, maxLength) + "'\n";
                 break;
             default:
                 // Gestion des types complexes (par exemple, en ajoutant le type directement sans $ref pour les types spéciaux)
@@ -281,5 +281,34 @@ class SwaggerController {
             return str;
         }
         return str.substring(0, 1).toLowerCase() + str.substring(1);
+    }
+    
+    private String generateStringExample(String name, int maxLength) {
+        StringBuilder sb = new StringBuilder(maxLength);
+        
+        // Vérifier des mots-clés dans le nom pour déterminer l'exemple
+        String baseString = name.toLowerCase().replaceAll("[^a-zA-Z0-9]", ""); // Retirer les caractères spéciaux du nom
+
+        if (baseString.contains("phone")) {
+            // Exemple de numéro de téléphone
+            sb.append("06 64 67 85 32");
+        } else if (baseString.contains("address")) {
+            // Exemple d'adresse
+            sb.append("123 Rue de l'Exemple, 75001 Paris");
+        } else if (baseString.contains("mail")) {
+            // Exemple d'email
+            sb.append("exemple@email.com");
+        } else if (baseString.startsWith("sign")) {
+            sb.append("+");
+        } else {
+            // Si aucun mot-clé n'est trouvé, on génère une chaîne répétée basée sur le nom du champ
+            int baseLength = baseString.length();
+            for (int i = 0; i < maxLength; i++) {
+                sb.append(baseString.charAt(i % baseLength)); // Répéter les lettres du nom du champ
+            }
+        }
+
+        // S'assurer que l'exemple respecte le maxLength
+        return sb.toString().substring(0, maxLength);  // Couper pour s'assurer que la longueur est respectée
     }
 }
