@@ -112,7 +112,8 @@
 
    <script>
     let generatedSwaggerYaml = '';  // Variable pour stocker le YAML généré
-
+    let nameSwaggerYaml = '';  // Variable pour stocker le nom du YAML
+    
     function generateSwagger() {
         let javaClassContent = document.getElementById("javaClassInput").value;
         if (!javaClassContent.trim()) {
@@ -142,9 +143,10 @@
             // Afficher le YAML dans le textarea
             document.getElementById("javaClassInput").value = data.swaggerYaml;  // Mettre le YAML dans le textarea
             generatedSwaggerYaml = data.swaggerYaml;  // Sauvegarder le YAML dans la variable
+            nameSwaggerYaml = data.fileName
 
             // Afficher le message de succès
-            document.getElementById("status").textContent = "✅ Swagger généré avec succès.";
+            document.getElementById("status").textContent = "✅ Swagger généré avec succès : " + nameSwaggerYaml;
             document.getElementById("status").style.color = "green";
 
             // Afficher le bouton de téléchargement maintenant
@@ -168,7 +170,7 @@
 
         // Créer un Blob avec le YAML et déclencher le téléchargement
         let blob = new Blob([generatedSwaggerYaml], { type: "text/yaml" });
-        saveAs(blob, "swagger.yaml"); // saveAs est une méthode de FileSaver.js
+        saveAs(blob, nameSwaggerYaml); // saveAs est une méthode de FileSaver.js
     }
 </script>
 
