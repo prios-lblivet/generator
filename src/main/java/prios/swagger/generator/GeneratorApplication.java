@@ -100,7 +100,7 @@ class SwaggerController {
                                     	tabInfo[0] = pair.getValue().toString().replace("\"", "");  // Stocker dans le tableau
                                     }
                                     if ("description".equals(pair.getNameAsString())) {
-                                    	tabInfo[1] = pair.getValue().toString().replace("\"", "");  // Stocker dans le tableau
+                                    	tabInfo[1] = pair.getValue().toString().replace("\"", "").replace(":", "");  // Stocker dans le tableau
                                     }
                                 }
                             }
@@ -216,7 +216,7 @@ class SwaggerController {
                 if ("ApiObjectField".equals(normalAnnotation.getNameAsString())) {
                     for (MemberValuePair pair : normalAnnotation.getPairs()) {
                         if ("description".equals(pair.getNameAsString())) {
-                            description = pair.getValue().toString().replace("\"", "");  // Retirer les guillemets
+                            description = pair.getValue().toString().replace("\"", "").replace(":", "");  // Retirer les guillemets
                         }
                     }
                 }
@@ -306,7 +306,8 @@ class SwaggerController {
             }
         }
 
-        // S'assurer que l'exemple respecte le maxLength
-        return sb.toString().substring(0, maxLength);  // Couper pour s'assurer que la longueur est respectée
+        int endIndex = Math.min(sb.toString().length(), maxLength);  // On cherche la valeur minimal pour ne pas couper une chaine plus petite que le maxLength
+
+        return sb.toString().substring(0, endIndex);  // Couper pour s'assurer que la longueur est respectée
     }
 }
