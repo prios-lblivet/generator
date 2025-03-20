@@ -57,18 +57,16 @@ class SwaggerController {
 	    String swaggerYaml = generateSwaggerYaml(javaClassContent);
 
 	    try {
-	        Path filePath = Paths.get(fileName);
-	        Files.write(filePath, swaggerYaml.getBytes());
-
+	    	
 	        // Construire la réponse JSON avec le nom de fichier et le contenu YAML
 	        Map<String, String> response = new HashMap<>();
 	        response.put("fileName", fileName);
 	        response.put("swaggerYaml", swaggerYaml);
 
 	        return ResponseEntity.ok(response);
-	    } catch (IOException e) {
+	    } catch (Exception  e) {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Collections.singletonMap("error", "Error generating file"));
+	                .body(Collections.singletonMap("error", "Erreur lors de la génération du Swagger : " + e.getMessage()));
 	    }
 	}
 
