@@ -83,13 +83,18 @@ public class SwaggerGeneratorService {
             // Parsing du code Java pour obtenir la CompilationUnit
             CompilationUnit compilationUnit = javaParser.parse(javaClassContent).getResult()
                     .orElseThrow(() -> new ParseException("Invalid Java code"));
+            
+            // Vérifier si la CompilationUnit contient des types
+            if (compilationUnit.getTypes().isEmpty()) {
+                throw new IllegalArgumentException("Aucune classe trouvée dans le code Java");
+            }
 
             // Récupérer la première classe dans la CompilationUnit et extraire son nom
             return compilationUnit.getClassByName(compilationUnit.getTypes().get(0).getNameAsString())
                     .map(clazz -> clazz.getNameAsString())
                     .orElse("toto"); // Si aucune classe trouvée, on retourne "toto"
-        } catch (ParseException e) {
-            return "toto"; // Nom par défaut en cas d'erreur
+        } catch (ParseException | IllegalArgumentException e) {
+            return "errorJava"; // Nom par défaut en cas d'erreur
         }
     }
 

@@ -28,10 +28,9 @@ class SwaggerController {
 	    String originalClassName = swaggerGeneratorService.extractClassName(javaClassContent);
 	    
 	    // Vérifier si le contenu est une classe Java valide
-	    if (originalClassName == null || originalClassName.equals("toto")) {
-	        Map<String, String> response = new HashMap<>();
-	        response.put("error", "Vous devez envoyer une classe Java");
-	        return ResponseEntity.badRequest().body(response);
+	    if (originalClassName == null || originalClassName.equals("errorJava")) {
+	    	 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+		                .body(Collections.singletonMap("error", "Vous devez envoyer une classe Java"));
 	    }
 	    
 	    String swaggerName = swaggerGeneratorService.toSnakeCase(originalClassName); // Convertir en snake_case
