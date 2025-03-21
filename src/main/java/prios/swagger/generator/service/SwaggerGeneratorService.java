@@ -93,7 +93,7 @@ public class SwaggerGeneratorService {
         }
     }
 
-	private String extractClassProperties(String javaClassContent) {
+	public String extractClassProperties(String javaClassContent) {
         StringBuilder properties = new StringBuilder();
 
         try {
