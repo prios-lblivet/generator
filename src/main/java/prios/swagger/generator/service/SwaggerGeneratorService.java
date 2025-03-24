@@ -234,16 +234,18 @@ public class SwaggerGeneratorService {
         } else if (baseString.contains("mail")) {
             // Exemple d'email
             sb.append("exemple@email.com");} 
-        else if (baseString.contains("codeEan128")) {
+        else if (baseString.toLowerCase().contains("ean128")) {
             // Exemple de code ean 128
             sb.append("(01)01234567890128");
         } else if (baseString.startsWith("sign")) {
             sb.append("+");
         } else {
-            // Si aucun mot-clé n'est trouvé, on génère une chaîne répétée basée sur le nom du champ
+            // Si aucun mot-clé n'est trouvé, on tronque simplement la baseString
             int baseLength = baseString.length();
-            for (int i = 0; i < maxLength; i++) {
-                sb.append(baseString.charAt(i % baseLength)); // Répéter les lettres du nom du champ
+            if (baseLength >= maxLength) {
+                sb.append(baseString.substring(0, maxLength)); // Tronquer à maxLength
+            } else {
+                sb.append(baseString); // Garder tel quel si c'est plus court
             }
         }
 
