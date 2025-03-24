@@ -233,7 +233,10 @@ public class SwaggerGeneratorService {
             sb.append("123 Rue de l'Exemple, 75001 Paris");
         } else if (baseString.contains("mail")) {
             // Exemple d'email
-            sb.append("exemple@email.com");
+            sb.append("exemple@email.com");} 
+        else if (baseString.contains("codeEan128")) {
+            // Exemple de code ean 128
+            sb.append("(01)01234567890128");
         } else if (baseString.startsWith("sign")) {
             sb.append("+");
         } else {
