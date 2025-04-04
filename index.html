@@ -5,64 +5,223 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur Swagger</title>
     <link rel="icon" type="image/png" href="https://www.prios.fr/wp-content/uploads/2020/07/cropped-logo-digital-32x32.png"> <!-- Remplacez l'URL par celle de votre favicon -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="script.js"></script>
+    
 
-    <style>
+      <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
             text-align: center;
+        }
+
+        /* Barre de navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 20px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Logo à gauche */
+        nav .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: rgb(41, 68, 113);
+            display: flex;
+            align-items: center;
+        }
+
+        nav .logo img {
+            margin-right: 10px;
+        }
+
+        /* Menu à droite */
+        nav .menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav .menu li {
+            margin-left: 20px;
+        }
+
+        nav .menu li a {
+            text-decoration: none;
+            color: rgb(41, 68, 113);
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        nav .menu li a:hover::after {
+		    content: '';
+		    position: absolute;
+		    bottom: 0;
+		    left: 0;
+		    width: 100%;
+		    height: 3px;
+		    background-color: rgb(41, 68, 113); /* Couleur du trait au survol */
+		    transition: all 0.3s ease;
+		}
+
+        /* Ajouter un trait en dessous de l'élément actif */
+        nav .menu li a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgb(41, 68, 113); /* Couleur du trait */
         }
         
         h2 {
-            color: #333;
+		    color: rgb(41, 68, 113);
+        }
+        
+        /* Style des onglets */
+		.tabs {
+		    display: flex;
+		    justify-content: space-around;
+		    margin-bottom: 20px;
+		}
+		
+		.tab {
+		    padding: 10px 20px;
+		    font-size: 16px;
+		    cursor: pointer;
+		    color: rgb(41, 68, 113);
+		    background-color: #f4f4f4;
+		    border-radius: 5px;
+		    transition: background-color 0.3s;
+		}
+		
+		/* Style pour l'onglet actif */
+		.tab.active {
+		    background-color: rgb(41, 68, 113);
+		    color: white;
+		    border-bottom: 3px solid white; /* Ajouter une barre sous l'onglet actif */
+		}
+		
+		/* Style pour les onglets non actifs au survol */
+		.tab:hover {
+		    background-color: #e0e0e0;
+		}
+		
+		/* Contenu des onglets */
+		.tab-content {
+		    display: none;
+		    border-radius: 5px;
+		}
+		
+		/* Contenu actif d'un onglet */
+		.tab-content.active {
+		    display: flex;
+		    flex-direction: column;
+		    height: 100%;
+		}
+        
+
+        /* Container principal */
+        .container {
+		    background: white;
+		    padding: 20px;
+		    margin: 20px;
+		    border-radius: 10px;
+		    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);		   
+		    flex-direction: column;
+		    height: calc(100vh - 150px); /* Hauteur de la fenêtre moins la hauteur du nav et marge */
+		    justify-content: flex-start; /* Cela pousse le contenu vers le bas */
+		}		
+		
+		.container-flex {
+			display: flex;
+		    flex-direction: column;
+		    height: 100%;
+		}
+        .content-section { 
+            display: none; 
+		    height: 100%;
         }
 
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-left: 0;
-            margin-right: 0;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
+        .content-section.active { 
+            display: block; 
         }
+
+       /* Style de la ligne qui contient les deux colonnes */
+		.row {
+		    display: flex;
+		    justify-content: space-between; /* Cela espace les deux colonnes aux extrémités */
+		    align-items: center; /* Aligner les éléments en bas */
+		}
+				
+		.col-left {
+		    display: flex;
+		    flex-direction: column;
+		    align-items: flex-start;
+		}
+		
+		.col-right {
+		    display: flex;
+		    align-items: flex-end;
+		    align-items: center;
+		}
 
         textarea {
-            width: 100%;
-            height: 60vh; /* Ajuster la hauteur comme tu le souhaites */
-            margin-left: 0;
-            margin-right: 0;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            box-sizing: border-box; /* Pour inclure les bordures et padding dans la largeur totale */
-        }
+		    width: 100%;
+		    height: 100%; /* Utiliser toute la hauteur disponible restante */
+		    border: 1px solid #ccc;
+		    border-radius: 5px;
+		    resize: none; /* Désactive le redimensionnement */
+		    margin-bottom: 20px; /* Un peu de marge en bas pour le bouton */
+		    flex-grow: 1; /* Le textarea prend tout l'espace restant */
+		}
+		
+		 .input {
+		    width: 300px;
+		    height: 40px;
+		    font-size: 16px;
+		    border: 1px solid #ccc;
+		    border-radius: 5px;
+		    resize: none; /* Désactive le redimensionnement */
+		    margin-bottom: 20px; /* Un peu de marge en bas pour le bouton */
+		}
+		
+		.height {
+		    height: calc(100vh - 220px);
+		    justify-content: flex-start;
+		    
+		}
 
-        textarea:hover {
-            border-color: #007bff;
-            box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
-        }
+		.buttons {
+		     margin-top: auto; /* Cela pousse la div .buttons vers le bas */		    
+		}
 
         .button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
+		    background-color: rgb(41, 68, 113);
+		    color: white;
+		    border: none;
+		    padding: 12px 20px;
+		    font-size: 16px;
+		    border-radius: 5px;
+		    cursor: pointer;
+		    margin-top: auto; /* Cela pousse le bouton vers le bas */
+		    transition: background-color 0.3s;
+		}
 
         .button:hover {
             background-color: #0056b3;
         }
-
+        
         #loading {
             display: none;
             margin-top: 15px;
@@ -70,7 +229,15 @@
             font-weight: bold;
             color: #007bff;
         }
-
+        
+        #loadingImport {
+            display: none;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #007bff;
@@ -96,83 +263,123 @@
             display: none;  /* Cacher le bouton au début */
             margin-top: 15px;
         }
+        
+        #dropZone {
+		    border: 2px dashed rgb(41, 68, 113);
+		    padding: 20px;
+		    text-align: center;
+		    cursor: pointer;
+		    background-color: #f4f4f4;
+		    border-radius: 10px;
+		    transition: background-color 0.3s ease;
+		}
+		
+		#dropZone:hover {
+		    background-color: #e0e0e0;
+		}
+		
+		#dropZone.dragover {
+		    background-color: #d3e3fd;
+		}
+        
     </style>
 </head>
 <body>
+	<!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <img src="https://www.prios.fr/wp-content/uploads/2020/07/pr_logo_priosblue-04-150x23.png" alt="Logo"> 
+        </div>
+        <ul class="menu">
+            <li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur java</a></li>
+            <li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de swagger</a></li>
+        </ul>
+    </nav>
     <div class="container">
-        <h2>🛠 Générateur Swagger</h2>
-        <p>Collez votre classe Java :</p>
-        <textarea id="javaClassInput" placeholder="Collez votre classe ici..."></textarea>
-        <br>
-        <button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer Swagger</button>
-        <p id="loading"><span class="loader"></span> Génération en cours...</p>
-        <p id="status"></p>
-        <button id="downloadButton" class="button" onclick="downloadSwagger()">📥 Télécharger Swagger</button>
+       
+        <div id="swagger-section" class="content-section">
+        
+    		<div class="container-flex">
+				<h2>🛠 Générateur Swagger</h2>
+			    <p>Collez votre classe Java :</p>
+			    <textarea id="javaClassInput" placeholder="Collez votre classe ici..."></textarea>
+			    
+			    <div class="buttons">
+				    <button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer Swagger</button>
+				    <p id="loading"><span class="loader"></span> Génération en cours...</p>
+				    <p id="status"></p>
+				    <button id="downloadButton" class="button" onclick="downloadSwagger()">📥 Télécharger Swagger</button>
+		    	</div> 
+		    </div>
+        </div>        
+        <div id="java-section" class="content-section active">
+	        <div class="tabs">
+	            <div class="tab active" onclick="openTab(event, 'import')">Import</div>
+	            <div class="tab" onclick="openTab(event, 'entity')">Entité</div>
+	            <div class="tab" onclick="openTab(event, 'table')">Table</div>
+	            <div class="tab" onclick="openTab(event, 'mapper')">Mapper</div>
+	            <div class="tab" onclick="openTab(event, 'controller')">Controller</div>
+	            <div class="tab" onclick="openTab(event, 'service')">Service</div>
+	            <div class="tab" onclick="openTab(event, 'serviceImpl')">ServiceImpl</div>
+	            <div class="tab" onclick="openTab(event, 'repository')">Repository</div>
+	            <div class="tab" onclick="openTab(event, 'swagger')">Swagger</div>
+	        </div>
+	        
+    		<div class="height">
+	    		<div class="container-flex">
+			        <div id="import" class="tab-content active">
+			        	<div class="row">
+						    <div class="col-left">
+						        <input class="input" id="className" placeholder="Nom de l'entité" />
+						        <input class="input" id="apiName" placeholder="Nom de l'API ex : api-a-sale" />
+						    </div>
+						    <div class="col-right">
+						        <!-- Ajouter un champ pour télécharger un fichier PDF -->
+						        <div class="buttons">
+									<!-- Zone de drag & drop -->
+									<div id="dropZone">
+									    <p>📂 Glissez-déposez votre fichier ici ou cliquez pour sélectionner</p>
+									    <input type="file" id="fileInput" accept=".pdf, .csv">
+									</div>
+									<p id="fileName"></p> <!-- Affiche le nom du fichier -->									
+						        </div>
+						    </div>
+						</div>
+						        		        	
+			            <textarea id="csvInput" placeholder="Collez votre xml ici..."></textarea>
+			             <div class="buttons">
+						    <button id="generateJava" class="button" onclick="generateJava()">🚀 Générer les classe java</button>
+						    <p id="loadingImport"><span class="loader"></span> Génération en cours...</p>
+				    		<p id="statusImport"></p>
+				    	</div> 
+			        </div>
+			        <div id="entity" class="tab-content">
+			            <textarea id="generatedEntity" placeholder="En attente de la génération de l'entité" readonly></textarea>
+			        </div>
+			        <div id="table" class="tab-content">
+			            <textarea id="generatedTable" placeholder="En attente de la génération de l'entité table" readonly></textarea>
+			        </div>
+			        <div id="mapper" class="tab-content">
+			            <textarea id="generatedMapper" placeholder="En attente de la génération du mapper" readonly></textarea>
+			        </div>
+			        <div id="controller" class="tab-content">
+			            <textarea id="generatedController" placeholder="En attente de la génération du controller" readonly></textarea>
+			        </div>
+			        <div id="service" class="tab-content">
+			            <textarea id="generatedService" placeholder="En attente de la génération du service" readonly></textarea>
+			        </div>
+			        <div id="serviceImpl" class="tab-content">
+			            <textarea id="generatedServiceImpl" placeholder="En attente de la génération de l'implémentation du service" readonly></textarea>
+			        </div>
+			        <div id="repository" class="tab-content">
+			            <textarea id="generatedRepository" placeholder="En attente de la génération du repository" readonly></textarea>
+			        </div>  
+			        <div id="swagger" class="tab-content">
+			            <textarea id="generatedSwagger" placeholder="En attente de la génération du swagger" readonly></textarea>
+			        </div>  
+			    </div>  
+			</div>  
+	   	</div>      
     </div>
-
-   <script>
-    let generatedSwaggerYaml = '';  // Variable pour stocker le YAML généré
-    let nameSwaggerYaml = '';  // Variable pour stocker le nom du YAML
-    
-    function generateSwagger() {
-        let javaClassContent = document.getElementById("javaClassInput").value;
-        if (!javaClassContent.trim()) {
-            alert("Veuillez coller une classe Java.");
-            return;
-        }
-
-        // Afficher le loader avant l'appel à fetch
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("status").textContent = ""; // Effacer tout message précédent
-        document.getElementById("downloadButton").style.display = "none";  // Cacher le bouton de téléchargement pendant la génération
-
-        fetch("http://localhost:8080/api/swagger/generate", {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: javaClassContent
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json(); // Lire la réponse JSON
-            }
-            return response.json().then(err => { // Lire l'erreur envoyée par le serveur
-                throw new Error(err.error || 'Erreur lors de la génération');
-            });
-        })
-        .then(data => {
-            // Afficher le YAML dans le textarea
-            document.getElementById("javaClassInput").value = data.swaggerYaml;  // Mettre le YAML dans le textarea
-            generatedSwaggerYaml = data.swaggerYaml;  // Sauvegarder le YAML dans la variable
-            nameSwaggerYaml = data.fileName
-
-            // Afficher le message de succès
-            document.getElementById("status").textContent = "✅ Swagger généré avec succès : " + nameSwaggerYaml;
-            document.getElementById("status").style.color = "green";
-
-            // Afficher le bouton de téléchargement maintenant
-            document.getElementById("downloadButton").style.display = "inline-block";
-
-            // Masquer le loader
-            document.getElementById("loading").style.display = "none";
-        })
-        .catch(error => {
-            document.getElementById("status").textContent = "❌ Erreur : " + error.message;
-            document.getElementById("status").style.color = "red";
-            document.getElementById("loading").style.display = "none"; // Masquer le loader en cas d'erreur
-        });
-    }
-
-    function downloadSwagger() {
-        if (!generatedSwaggerYaml) {
-            alert("Aucun fichier Swagger généré.");
-            return;
-        }
-
-        // Créer un Blob avec le YAML et déclencher le téléchargement
-        let blob = new Blob([generatedSwaggerYaml], { type: "text/yaml" });
-        saveAs(blob, nameSwaggerYaml); // saveAs est une méthode de FileSaver.js
-    }
-</script>
-
 </body>
 </html>

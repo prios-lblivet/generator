@@ -60,13 +60,14 @@ public class SwaggerGeneratorService {
         // Si aucune annotation @ApiObject n'est trouvée, utiliser des valeurs par défaut
         String title = tabInfo != null && tabInfo[0] != null ? tabInfo[0] : className;  // Utiliser le nom de la classe par défaut
         String description = tabInfo != null && tabInfo[1] != null ? tabInfo[1] : "Automatically generated API documentation";  // Utiliser le nom de la classe par défaut
-
+	    String routes = generateRoutes(className);
 
         return "openapi: 3.0.1\n" +
                 "info:\n" +
                 "  title: \"" + title + " API\"\n" +
                 "  description: \"" + description + "\"\n" +
-                "  version: 1.0.0\n" +
+                "  version: 1.0.0\n\n" +
+                routes +
                 "components:\n" +
                 "  schemas:\n" +
                 "    " + className + ":\n" +
@@ -74,6 +75,78 @@ public class SwaggerGeneratorService {
                 "      properties:\n" +
                 properties;
     }
+
+	private String generateRoutes(String className) {
+	    return "paths:\n" +
+	           "  /v1/" + toCamelCase(className) + "s:\n" +
+	           "    get:\n" +
+	           "      summary: Récupère la liste des " + className + "\n" +
+	           "      description: Récupère la liste des " + className + "\n" +
+	           "      operationId: getAll" + className + "\n" +
+	           "      tags:\n" +
+	           "        - " + className + "\n" +
+	           "      parameters:\n" +
+	           "        - name: idCompany\n" +
+	           "          in: header\n" +
+	           "          required: true\n" +
+	           "          schema:\n" +
+	           "            type: integer\n" +
+	           "        - name: idEstablishment\n" +
+	           "          in: header\n" +
+	           "          required: true\n" +
+	           "          schema:\n" +
+	           "            type: integer\n" +
+	           "        - name: deleteRecord\n" +
+	           "          in: query\n" +
+	           "          required: false\n" +
+	           "          schema:\n" +
+	           "            type: string\n" +
+	           "            enum: [all, true, false]\n" +
+	           "      responses:\n" +
+	           "        \"200\":\n" +
+	           "          description: Liste des " + className + "s récupérée avec succès\n" +
+	           "          content:\n" +
+	           "            application/json:\n" +
+	           "              schema:\n" +
+	           "                type: array\n" +
+	           "                items:\n" +
+	           "                  $ref: \"#/components/schemas/" + className + "\"\n" +
+	           "        \"404\":\n" +
+	           "          description: Liste des " + className + " non trouvée\n\n" +
+	           "  /v1/" + toCamelCase(className) + "s/{id}:\n" +
+	           "    get:\n" +
+	           "      summary: Récupère un " + className + " par son id\n" +
+	           "      description: Récupère un " + className + " par son id\n" +
+	           "      operationId: get" + className + "ById\n" +
+	           "      tags:\n" +
+	           "        - " + className + "\n" +
+	           "      parameters:\n" +
+	           "        - name: id\n" +
+	           "          in: path\n" +
+	           "          required: true\n" +
+	           "          schema:\n" +
+	           "            type: integer\n" +
+	           "        - name: idCompany\n" +
+	           "          in: header\n" +
+	           "          required: true\n" +
+	           "          schema:\n" +
+	           "            type: integer\n" +
+	           "        - name: idEstablishment\n" +
+	           "          in: header\n" +
+	           "          required: true\n" +
+	           "          schema:\n" +
+	           "            type: integer\n" +
+	           "      responses:\n" +
+	           "        \"200\":\n" +
+	           "          description: " + className + " récupéré avec succès\n" +
+	           "          content:\n" +
+	           "            application/json:\n" +
+	           "              schema:\n" +
+	           "                $ref: \"#/components/schemas/" + className + "\"\n" +
+	           "        \"404\":\n" +
+	           "          description: " + className + " non trouvé\n\n";
+	}
+
 
 	public String extractClassName(String javaClassContent) {
         try {
@@ -192,7 +265,7 @@ public class SwaggerGeneratorService {
             default:
                 // Gestion des types complexes (par exemple, en ajoutant le type directement sans $ref pour les types spéciaux)
                 if (isSpecialComplexType(fieldType)) {
-                    swaggerProperty += "          type: " + toLowerCaseFirstLetter(fieldType) + "Type\n";
+                    swaggerProperty += "          type: " + toCamelCase(fieldType) + "Type\n";
                 } else {
                     swaggerProperty += "          $ref: '#/components/schemas/" + fieldType + "'\n";
                 }
@@ -234,9 +307,12 @@ public class SwaggerGeneratorService {
         } else if (baseString.contains("mail")) {
             // Exemple d'email
             sb.append("exemple@email.com");} 
-        else if (baseString.toLowerCase().contains("ean128")) {
+        else if (baseString.contains("ean128")) {
             // Exemple de code ean 128
             sb.append("(01)01234567890128");
+        } else if (baseString.contains("ean113")) {
+            // Exemple de code ean 13
+            sb.append("4006381333931");
         } else if (baseString.startsWith("sign")) {
             sb.append("+");
         } else {
@@ -253,12 +329,9 @@ public class SwaggerGeneratorService {
 
         return sb.toString().substring(0, endIndex);  // Couper pour s'assurer que la longueur est respectée
     }
-    
-    private String toLowerCaseFirstLetter(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toLowerCase() + str.substring(1);
+ 
+    private String toCamelCase(String className) {
+        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
     public static String toSnakeCase(String className) {
