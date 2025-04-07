@@ -27,14 +27,14 @@ class JavaController {
     
     @PostMapping("/generate")
     public ApiResponse generateJavaClasses(@RequestHeader String className, @RequestHeader String apiName, @RequestBody String csvContent) {
-    	List<Map<String, String>> csvContentList = javaGeneratorService.csvToList(csvContent);
-        String entity = javaGeneratorService.generateEntity(className, apiName, csvContentList);
-        String table = javaGeneratorService.generateTable(className, apiName, csvContentList);
-        String mapper = javaGeneratorService.generateMapper(className, apiName);
-        String controller = javaGeneratorService.generateController(className, apiName);
-        String service = javaGeneratorService.generateService(className, apiName);
-        String serviceImpl = javaGeneratorService.generateServiceImpl(className, apiName);
-        String repository = javaGeneratorService.generateRepository(className, apiName);
+    	javaGeneratorService.init(csvContent, className, apiName);
+        String entity = javaGeneratorService.generateEntity();
+        String table = javaGeneratorService.generateTable();
+        String mapper = javaGeneratorService.generateMapper();
+        String controller = javaGeneratorService.generateController();
+        String service = javaGeneratorService.generateService();
+        String serviceImpl = javaGeneratorService.generateServiceImpl();
+        String repository = javaGeneratorService.generateRepository();
         String swagger = javaGeneratorService.generateSwagger(entity);
 
         return new ApiResponse(entity, table, mapper, controller, service, serviceImpl, repository, swagger);

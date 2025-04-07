@@ -12,8 +12,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class JavaGeneratorService {
+	
+	private List<Map<String, String>> listCsv;
+	private String className;
+	private String apiName;
+	private String description; 
+	private String bddName; 
     
-	public String generateEntity(String className, String apiName, List<Map<String, String>> csvContent) {
+	public String generateEntity() {
 	    String packageName = "com.prios.api.a." + apiName + ".shared." + classNameToPackage(className);
 
 	    // Initialiser le code de la classe avec la déclaration du package et les imports
@@ -28,7 +34,9 @@ public class JavaGeneratorService {
 	    classCode.append("import javax.persistence.MappedSuperclass;\n");
 	    classCode.append("import javax.persistence.PrePersist;\n");
 	    classCode.append("import javax.persistence.PreUpdate;\n");
+	    classCode.append("import javax.validation.Valid;\n");
 	    classCode.append("import javax.validation.constraints.Digits;\n");
+	    classCode.append("import javax.validation.constraints.Size;\n");
 	    classCode.append("import org.hibernate.annotations.GenericGenerator;\n");
 	    classCode.append("import org.hibernate.annotations.Type;\n");
 	    classCode.append("import org.hibernate.annotations.TypeDef;\n");
@@ -44,7 +52,7 @@ public class JavaGeneratorService {
 	    classCode.append("@Getter\n");
 	    classCode.append("@Setter\n");
 	    classCode.append("@MappedSuperclass\n");
-	    classCode.append("@ApiObject(name = \"Pricing Cost\", description = \"Tarif de Vente - Coûts\")\n");
+	    classCode.append("@ApiObject(name = \"" + splitCaseWords(className) + "\", description = \"" + description + "\")\n");
 	    classCode.append("@TypeDef(name = \"ouiNonType\", typeClass = OuiNonType.class)\n");
 
 	    classCode.append("public class ").append(className).append(" implements Serializable {\n\n");
@@ -55,7 +63,7 @@ public class JavaGeneratorService {
         Set<String> embeddedClasses = new HashSet<>();
 
 	    // Ajouter les champs
-	    for (Map<String, String> rowMap : csvContent) {
+	    for (Map<String, String> rowMap : listCsv) {
 	        String nomVariable = rowMap.get("Nom variable");
 	        String description = rowMap.get("Libellé Champ");
 
@@ -168,7 +176,7 @@ public class JavaGeneratorService {
 	}
 
 
-    public String generateTable(String className, String apiName, List<Map<String, String>> csvContent) {
+    public String generateTable() {
     	String name = className + "Table";
     	String packageName = "com.prios.api.a." + apiName + ".shared." + classNameToPackage(className);
     	
@@ -192,11 +200,11 @@ public class JavaGeneratorService {
         classCode.append("@Setter\n");
         classCode.append("@EqualsAndHashCode(callSuper = false)\n");
         classCode.append("@Entity\n");
-        classCode.append("@Table(name = \"BTARVCP\")\n");
-        classCode.append("@ApiObject(name = \"Pricing Cost Table\", description = \"Tarif de Vente - Coûts (Table)\")\n");
+        classCode.append("@Table(name = \"" + bddName + "\")\n");
+        classCode.append("@ApiObject(name = \"" + splitCaseWords(className) + " Table\", description = \"" + description + " (Table)\")\n");
         classCode.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
         
-        for (Map<String, String> rowMap : csvContent) {
+        for (Map<String, String> rowMap : listCsv) {
         	String nomVariable = rowMap.get("Nom variable");
             String nomLong = rowMap.get("Nom");
 
@@ -205,7 +213,7 @@ public class JavaGeneratorService {
 
             // Créer l'annotation avec ou sans updatable = false
             classCode.append("@AttributeOverride(name = \"").append(nomVariable)
-                      .append("\", column = @Column(name = \"").append(nomLong);
+                      .append(", column = @Column(name = \"").append(nomLong).append("\"");
             
             if (addUpdatableFalse) {
                 classCode.append("\", updatable = false");  // Ajouter updatable = false
@@ -214,7 +222,7 @@ public class JavaGeneratorService {
         }   
        
         classCode.append("@DynamicUpdate\n");
-        classCode.append("public class ").append(name).append(" extends PricingCost {\n\n");
+        classCode.append("public class ").append(name).append(" extends " + className +"{\n\n");
 
         // Ajouter un champ statique serialVersionUID
         classCode.append("\t// TODO: générer serialVersionUID\n");   
@@ -226,9 +234,10 @@ public class JavaGeneratorService {
         return classCode.toString();
     }
     
-    public String generateMapper(String className, String apiName) {
+    public String generateMapper() {
         String packageName = "com.prios.api.a." + apiName + ".mapper." + classNameToPackage(className);
         String entityName = className + "Table";
+        String classNameCamelCase = toCamelCase(className + "Table");
         String dtoName = className + "Dto";
         String mapperName = className + "Mapper";
         
@@ -240,16 +249,16 @@ public class JavaGeneratorService {
                "import com.prios.core.a.shared.dto." + apiName + "." + dtoName + ";\n\n" +
                "@Mapper\n" +
                "public interface " + mapperName + " {\n\n" +
-               "\tList<" + entityName + "> " + toCamelCase(entityName) + "DtosTo" + entityName + "s(List<" + dtoName + "> " + toCamelCase(entityName) + "Dtos);\n\n" +
-               "\t" + dtoName + " " + toCamelCase(entityName) + "To" + dtoName + "(" + entityName + " " + toCamelCase(entityName) + ");\n\n" +
-               "\tList<" + dtoName + "> " + toCamelCase(entityName) + "To" + dtoName + "s(List<" + entityName + "> " + toCamelCase(entityName) + "s);\n\n" +
-               "\tdefault Optional<" + dtoName + "> optional" + entityName + "ToOptional" + dtoName + "(Optional<" + entityName + "> optional" + entityName + ") {\n" +
-               "\t\treturn optional" + entityName + ".map(this::" + toCamelCase(entityName) + "To" + dtoName + ");\n" +
+               "\tList<" + entityName + "> " + classNameCamelCase + "DtosTo" + className + "s(List<" + dtoName + "> " + classNameCamelCase + "Dtos);\n\n" +
+               "\t" + dtoName + " " + classNameCamelCase + "To" + dtoName + "(" + entityName + " " + classNameCamelCase + ");\n\n" +
+               "\tList<" + dtoName + "> " + classNameCamelCase + "To" + dtoName + "s(List<" + entityName + "> " + classNameCamelCase + "s);\n\n" +
+               "\tdefault Optional<" + dtoName + "> optional" + className + "ToOptional" + dtoName + "(Optional<" + entityName + "> optional" + className + ") {\n" +
+               "\t\treturn optional" + className + ".map(this::" + classNameCamelCase + "To" + dtoName + ");\n" +
                "\t}\n" +
                "}";
     }
     
-    public String generateController(String className, String apiName) {
+    public String generateController() {
         String packageName = "com.prios.api.a." + apiName + ".controller." + classNameToPackage(className);
         String serviceName = className + "Service";
         String serviceVarName = toCamelCase(serviceName);
@@ -307,7 +316,7 @@ public class JavaGeneratorService {
                "}";
     }
 
-    public String generateService(String className, String apiName) {
+    public String generateService() {
         String packageName = "com.prios.api.a." + apiName + ".service." + classNameToPackage(className);
         String entityName = className + "Table";
         String serviceName = className + "Service";
@@ -323,7 +332,7 @@ public class JavaGeneratorService {
                "}";
     }
     
-    public String generateServiceImpl(String className, String apiName) {
+    public String generateServiceImpl() {
         String packageName = "com.prios.api.a." + apiName + ".service." + classNameToPackage(className);
         String repositoryName = className + "Repository";
         String entityName = className + "Table";
@@ -356,7 +365,7 @@ public class JavaGeneratorService {
                "}";
     }
 
-    public String generateRepository(String className, String apiName) {
+    public String generateRepository() {
         String packageName = "com.prios.api.a." + apiName + ".repository." + classNameToPackage(className);
         String entityName = className + "Table";
         String repositoryName = className + "Repository";
@@ -384,7 +393,22 @@ public class JavaGeneratorService {
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
     
-    public List<Map<String, String>> csvToList(String csvContent) {
+    public String splitCaseWords(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        // Séparer après les minuscules suivies de majuscules OU majuscules suivies de majuscules + minuscules
+        String withSpaces = input.replaceAll("(?<=[a-z])(?=[A-Z])", " ")
+                                 .replaceAll("(?<=[A-Z])(?=[A-Z][a-z])", " ");
+
+        return withSpaces.trim().replaceAll(" +", " ");
+    }
+    
+    public void init(String csvContent, String className, String apiName) {
+    	this.apiName = apiName;
+    	this.className = className;
+    	this.description = null;
+    	this.bddName = null;
+    	
         // Initialiser une liste pour stocker toutes les lignes sous forme de liste
         List<List<String>> allRows = new ArrayList<>();
         List<String> columnNames = new ArrayList<>();
@@ -421,21 +445,29 @@ public class JavaGeneratorService {
             for (String column : columnsInLine) {
                 rowList.add(column.isEmpty() ? "" : column); // S'assurer que les colonnes vides sont ajoutées comme chaînes vides
             }
+            
+            if (bddName == null && rowList.size() > 2 && !rowList.get(1).isEmpty()) {
+            	bddName = rowList.get(1);
+            } 
+            
+            if (description == null && rowList.size() > 2 && !rowList.get(2).isEmpty()) {
+            	description = rowList.get(2);
+            }
+            
             allRows.add(rowList);
         }
 
         // Création d'une map pour chaque ligne, où les clés sont les noms des colonnes et les valeurs sont les valeurs des colonnes
-        List<Map<String, String>> mappedRows = new ArrayList<>();
+        this.listCsv = new ArrayList<>();
 
         for (List<String> row : allRows) {
             Map<String, String> rowMap = new HashMap<>();
             for (int i = 0; i < columnNames.size(); i++) {
                 rowMap.put(columnNames.get(i), row.get(i)); // Map les noms des colonnes aux valeurs
             }
-            mappedRows.add(rowMap);
+            this.listCsv.add(rowMap);
         }
 
-        return mappedRows;
     }
 
 
