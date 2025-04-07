@@ -1,8 +1,9 @@
-# Swagger Generator pour core-a
+# Generator pour core-a
 
-Ce projet permet de générer automatiquement des fichiers Swagger à partir de classes Java. L'outil analyse les classes Java fournies, extrait leurs annotations et génère un fichier de configuration Swagger valide en format YAML. Ce projet est configurer pour correspondre aux normes de core-a
+- Ce projet permet de générer automatiquement des fichiers Swagger à partir de classes Java. L'outil analyse les classes Java fournies, extrait leurs annotations et génère un fichier de configuration Swagger valide en format YAML. Ce projet est configurer pour correspondre aux normes de core-a
+- et des classes Java directement depuis un fichier CSV respectant un format spécifique.
 
-## Prérequis
+## ⚙️ Prérequis
 
 Avant de commencer, assurez-vous que vous avez installé les éléments suivants sur votre machine :
 
@@ -10,7 +11,7 @@ Avant de commencer, assurez-vous que vous avez installé les éléments suivants
 - **Spring Tool Suite (STS)** ou **IntelliJ IDEA** pour la gestion du projet Java.
 - **Maven** 
 
-## Installation et exécution
+## 🚀 Installation et exécution
 
 ### Cloner le projet
 
@@ -28,7 +29,7 @@ Avant de commencer, assurez-vous que vous avez installé les éléments suivants
     ```
    Vous pouvez aussi utiliser votre IDE.
 
-3. L'application démarre sur le port `8080` par défaut.
+3. L'application démarre sur le port `8091` par défaut.
 
 ### Ouvrir l'interface graphique
 
@@ -37,18 +38,55 @@ Une fois l'application démarrée, ouvrez le fichier `index.html` dans votre nav
 - Le fichier `index.html` se trouve à la racine du projet.
 - Ouvrez ce fichier avec votre navigateur préféré (par exemple, **Google Chrome** ou **Firefox**).
 
-## Utilisation de l'interface graphique
+## 🖥️ Utilisation de l'interface graphique
 
 L'interface graphique permet de générer un fichier Swagger en envoyant une classe Java via une interface Web.
 
 ### Générer un fichier Swagger
 
-1. Copiez le code source Java de la classe pour laquelle vous souhaitez générer un fichier Swagger.
-2. Collez ce code dans le formulaire prévu à cet effet dans l'interface graphique.
-3. Cliquez sur le bouton pour générer le fichier Swagger.
-4. Le fichier Swagger sera généré et vous pourrez le télécharger directement.
+1. Cliquez sur `générateur de swagger` dans le menu
+2. Copiez le code source Java de la classe pour laquelle vous souhaitez générer un fichier Swagger.
+3. Collez ce code dans le formulaire prévu à cet effet dans l'interface graphique.
+4. Cliquez sur le bouton pour générer le fichier Swagger.
+5. Le fichier Swagger sera généré et vous pourrez le télécharger directement.
 
-## Spécifications prises en compte lors de la génération du fichier Swagger
+### Générer une classe Java à partir d’un CSV
+
+1. Dans l'onglet `import` uploadez (ou copier-coller) un fichier CSV décrivant les champs de la classe.
+2. Cliquez sur le bouton `Générer les classes java` pour générer les classes.
+2. Le code Java généré s’affiche instantanément dans l’interface dans chaque onglet spécifique.
+3. Vous pouvez le copier ou l’utiliser directement pour générer un Swagger.
+
+## 📄 Exemple de fichier CSV
+
+### Exemple de fichier CSV à uploader
+
+```csv
+BDD;Fichier;Libellé Fichier;FNom long;Nom;Seq;Libellé Champ;T;Lng;Digit;Dec;Nom long;Nom variable;Embedded;Not null
+DCL;BLIPPRP;Liste de prix prévisionnels;LISTE_PRIX_PREV;ILROSUPENR;100;Suppression enreg (Oui/Non);;1;1;;IL_RPO_SUP_ENR;deleteRecord;;
+DCL;BLIPPRP;Liste de prix prévisionnels;LISTE_PRIX_PREV;ILIDSOC;200;Identifiant Société;S;9;9;0;IL_IDT_SOC;idCompany;;true
+DCL;BLIPPRP;Liste de prix prévisionnels;LISTE_PRIX_PREV;ILIDETB;300;Identifiant Etablissement;S;9;9;0;IL_IDT_ETB;idEstablishment;;true
+DCL;BLIPPRP;Liste de prix prévisionnels;LISTE_PRIX_PREV;ILIDLSTPPR;400;Identifiant Liste de Prix Prévisionnels;S;9;9;0;IL_IDT_LST_PPR;id;;true
+DCL;BLIPPRP;Liste de prix prévisionnels;LISTE_PRIX_PREV;ILCDLSTPPR;500;Code Liste de Prix Prévisionnels;;3;3;;IL_COD_LST_PPR;code;; 
+```
+### Structure des colonnes du CSV :
+
+- **BDD** : Base de données associée (ex : DCL).
+- **Fichier** : Nom du fichier (ex : BLIPPRP).
+- **Libellé Fichier** : Description du fichier (ex : Liste de prix prévisionnels).
+- **FNom long** : Nom complet de la table/entité (ex : LISTE_PRIX_PREV).
+- **Nom** : Identifiant court de la colonne dans la base de données (ex : ILROSUPENR).
+- **Seq** : Numéro de séquence du champ.
+- **Libellé Champ** : Libellé du champ (ex : Suppression enreg (Oui/Non)).
+- **Lng** : Longueur maximale du champ (en caractères).
+- **Digit** : Nombre de chiffres.
+- **Dec** : Nombre de décimales.
+- **Nom long** : Nom complet du champ.
+- **Nom variable** : Nom de la variable générée en Java.
+- **Embedded** : Champ intégré dans un autre objet (vide si non applicable).
+- **Not null** : Indicateur de nullité du champ (valeur `true` ou vide).
+
+## 📚 Spécifications prises en compte lors de la génération du fichier Swagger
 
 Lors de la génération du fichier Swagger, l'outil prend en compte les spécifications suivantes :
 
@@ -83,6 +121,12 @@ Lors de la génération du fichier Swagger, l'outil prend en compte les spécifi
     - `VehicleBoxesTourLoadingExchange`
     - `VeterinarianDeliveryOrderExchange`
     - `HistoryManagementA`
-   Pour tous les autres types complexes, ils sont référencés par `$ref`.
+   
+Pour tous les autres types complexes, ils sont référencés par `$ref`.
 
 Cela permet de générer des fichiers Swagger bien structurés et conformes aux spécifications du projet.
+
+## 📋 Exemple de fichier CSV
+Voici un exemple de fichier CSV à uploader pour générer des classes Java :
+
+
