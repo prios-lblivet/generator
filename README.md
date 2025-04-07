@@ -125,8 +125,3 @@ Lors de la génération du fichier Swagger, l'outil prend en compte les spécifi
 Pour tous les autres types complexes, ils sont référencés par `$ref`.
 
 Cela permet de générer des fichiers Swagger bien structurés et conformes aux spécifications du projet.
-
-## 📋 Exemple de fichier CSV
-Voici un exemple de fichier CSV à uploader pour générer des classes Java :
-
-
