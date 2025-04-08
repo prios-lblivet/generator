@@ -111,8 +111,6 @@ public class SwaggerGeneratorService {
 	           "                type: array\n" +
 	           "                items:\n" +
 	           "                  $ref: \"#/components/schemas/" + className + "\"\n" +
-	           "        \"404\":\n" +
-	           "          description: Liste des " + className + " non trouvée\n\n" +
 	           "  /v1/" + toCamelCase(className) + "s/{id}:\n" +
 	           "    get:\n" +
 	           "      summary: Récupère un " + className + " par son id\n" +
