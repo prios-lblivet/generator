@@ -13,7 +13,7 @@ function generateSwagger() {
 	document.getElementById("status").textContent = ""; // Effacer tout message précédent
 	document.getElementById("downloadButton").style.display = "none";  // Cacher le bouton de téléchargement pendant la génération
 
-	fetch("http://localhost:8080/api/swagger/generate", {
+	fetch("http://localhost:8091/api/swagger/generate", {
 		method: "POST",
 		headers: { "Content-Type": "text/plain" },
 		body: javaClassContent
@@ -86,7 +86,7 @@ function generateJava() {
 	document.getElementById("loadingImport").style.display = "block";
 	document.getElementById("statusImport").textContent = ""; // Effacer tout message précédent
 
-	fetch("http://localhost:8080/api/java/generate", {
+	fetch("http://localhost:8091/api/java/generate", {
 	            method: "POST",
 	            headers: { 
 	            	"Content-Type": "text/plain",
@@ -209,7 +209,7 @@ function sendPDF(file) {
 	document.getElementById("statusImport").textContent = ""; // Effacer tout message précédent
 
     // Envoi du fichier PDF via fetch
-    fetch("http://localhost:8080/api/csv/generate", {
+    fetch("http://localhost:8091/api/csv/generate", {
         method: "POST",
         body: formData  // Le corps de la requête est l'objet FormData
     })
