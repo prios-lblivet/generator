@@ -110,7 +110,7 @@ public class SwaggerGeneratorService {
 	           "              schema:\n" +
 	           "                type: array\n" +
 	           "                items:\n" +
-	           "                  $ref: \"#/components/schemas/" + className + "\"\n" +
+	           "                  $ref: \"#/components/schemas/" + className + "\"\n\n" +
 	           "  /v1/" + toCamelCase(className) + "s/{id}:\n" +
 	           "    get:\n" +
 	           "      summary: Récupère un " + className + " par son id\n" +
