@@ -213,10 +213,10 @@ public class JavaGeneratorService {
 
             // Créer l'annotation avec ou sans updatable = false
             classCode.append("@AttributeOverride(name = \"").append(nomVariable)
-                      .append(", column = @Column(name = \"").append(nomLong).append("\"");
+                      .append("\", column = @Column(name = \"").append(nomLong).append("\"");
             
             if (addUpdatableFalse) {
-                classCode.append("\", updatable = false");  // Ajouter updatable = false
+                classCode.append(", updatable = false");  // Ajouter updatable = false
             }
             classCode.append("))\n");
         }   
@@ -237,7 +237,7 @@ public class JavaGeneratorService {
     public String generateMapper() {
         String packageName = "com.prios.api.a." + apiName + ".mapper." + classNameToPackage(className);
         String entityName = className + "Table";
-        String classNameCamelCase = toCamelCase(className + "Table");
+        String classNameCamelCase = toCamelCase(className);
         String dtoName = className + "Dto";
         String mapperName = className + "Mapper";
         
@@ -299,7 +299,7 @@ public class JavaGeneratorService {
                "\t\t\t\t\t\t\t\t\t@RequestHeader(value = \"idEstablishment\") Integer idEstablishment,\n" +
                "\t\t\t\t\t\t\t\t\t@RequestParam(value = \"deleteRecord\", required = false) String deleteRecord) {\n\n" +
                "\t\tList<" + entityName + "> " + toCamelCase(entityName) + "s = " + serviceVarName + ".findAll(getRequestParams(this, getMethodName(), request), idCompany, idEstablishment, deleteRecord);\n" +
-               "\t\tList<" + dtoName + "> " + toCamelCase(dtoName) + "s = " + mapperVarName + "." + toCamelCase(entityName) + "To" + dtoName + "s(" + toCamelCase(entityName) + "s);\n" +
+               "\t\tList<" + dtoName + "> " + toCamelCase(dtoName) + "s = " + mapperVarName + "." + toCamelCase(className) + "To" + dtoName + "s(" + toCamelCase(entityName) + "s);\n" +
                "\t\treturn ResponseEntity.ok(" + toCamelCase(dtoName) + "s);\n" +
                "\t}\n\n" +
                "\t@Override\n" +
