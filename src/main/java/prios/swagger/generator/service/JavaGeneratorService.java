@@ -40,8 +40,6 @@ public class JavaGeneratorService {
 	    classCode.append("import org.hibernate.annotations.GenericGenerator;\n");
 	    classCode.append("import org.hibernate.annotations.Type;\n");
 	    classCode.append("import org.hibernate.annotations.TypeDef;\n");
-	    classCode.append("import org.jsondoc.core.annotation.ApiObject;\n");
-	    classCode.append("import org.jsondoc.core.annotation.ApiObjectField;\n");
 	    classCode.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n");
 	    classCode.append("import com.prios.tools.config.data.IdConverter;\n");
 	    classCode.append("import com.prios.tools.config.data.OuiNonType;\n");
@@ -52,7 +50,6 @@ public class JavaGeneratorService {
 	    classCode.append("@Getter\n");
 	    classCode.append("@Setter\n");
 	    classCode.append("@MappedSuperclass\n");
-	    classCode.append("@ApiObject(name = \"" + splitCaseWords(className) + "\", description = \"" + description + "\")\n");
 	    classCode.append("@TypeDef(name = \"ouiNonType\", typeClass = OuiNonType.class)\n");
 
 	    classCode.append("public class ").append(className).append(" implements Serializable {\n\n");
@@ -92,20 +89,17 @@ public class JavaGeneratorService {
 	        		embeddedClasses.add(embeddedName);
 	        		classCode.append("\t@Embedded\n");
 		            classCode.append("\t@Valid\n");
-			        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 		            classCode.append("\tprivate ").append(embedded).append(" ").append(embeddedName).append(";\n\n");  
 	        	}  
 	        }
 	        // Si Lng et Digit sont à 1, c'est un boolean
 	        else if ("1".equals(lng) && "1".equals(digit)) {
 	            classCode.append("\t@Type(type = \"ouiNonType\")\n");
-		        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 	            classCode.append("\tprivate boolean ").append(nomVariable).append(";\n\n");
 	        }
 	        // Si "Dec" est vide, c'est un String
 	        else if (dec == null || dec.isEmpty()) {
 	            classCode.append("\t@Size(max = ").append(lng).append(")\n");
-		        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 	            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
 	        }
 	        // Si "Dec" est "0"
@@ -115,11 +109,9 @@ public class JavaGeneratorService {
 	            	if (nomVariable.equals("id"))
 			            classCode.append("\t@Id\n");
 		            classCode.append("\t@Digits(integer = ").append(lng).append(", fraction = 0)\n");
-			        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 		            classCode.append("\tprivate Integer ").append(nomVariable).append(";\n\n");
 	            } else {
 		            classCode.append("\t@Digits(integer = ").append(lng).append(", fraction = 0)\n");
-			        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 		            classCode.append("\tprivate Long ").append(nomVariable).append(";\n\n");
 	            }
 	        }
@@ -130,11 +122,9 @@ public class JavaGeneratorService {
 		        Integer digitInt = Integer.parseInt(digit);
 	            if (Integer.parseInt(lng) <= 9) {
 		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
-			        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 		            classCode.append("\tprivate Double ").append(nomVariable).append(";\n\n");
 	            } else {
 		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
-			        classCode.append("\t@ApiObjectField(description = \"").append(description).append("\")\n");
 		            classCode.append("\tprivate Float ").append(nomVariable).append(";\n\n");
 	            }
 	        }        
@@ -189,7 +179,6 @@ public class JavaGeneratorService {
         classCode.append("import javax.persistence.Entity;\n");
         classCode.append("import javax.persistence.Table;\n");
         classCode.append("import org.hibernate.annotations.DynamicUpdate;\n");
-        classCode.append("import org.jsondoc.core.annotation.ApiObject;\n");
         classCode.append("import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n");
         classCode.append("import lombok.EqualsAndHashCode;\n");
         classCode.append("import lombok.Getter;\n");
@@ -201,7 +190,6 @@ public class JavaGeneratorService {
         classCode.append("@EqualsAndHashCode(callSuper = false)\n");
         classCode.append("@Entity\n");
         classCode.append("@Table(name = \"" + bddName + "\")\n");
-        classCode.append("@ApiObject(name = \"" + splitCaseWords(className) + " Table\", description = \"" + description + " (Table)\")\n");
         classCode.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
         
         for (Map<String, String> rowMap : listCsv) {
