@@ -92,10 +92,15 @@ public class JavaGeneratorService {
 		            classCode.append("\tprivate ").append(embedded).append(" ").append(embeddedName).append(";\n\n");  
 	        	}  
 	        }
-	        // Si Lng et Digit sont à 1, c'est un boolean
+	        // Si Lng et Digit sont à 1, c'est un boolean /!\ réctification ça peu aussi être un string de 1 caratère
 	        else if ("1".equals(lng) && "1".equals(digit)) {
-	            classCode.append("\t@Type(type = \"ouiNonType\")\n");
-	            classCode.append("\tprivate boolean ").append(nomVariable).append(";\n\n");
+	        	if (nomVariable.toLowerCase().contains("(Oui/Non)") || nomVariable.toLowerCase().contains("(O/N)") ) {
+		            classCode.append("\t@Size(max = ").append(lng).append(")\n");
+		            classCode.append("\tprivate boolean ").append(nomVariable).append(";\n\n");
+	        	} else {
+	        		classCode.append("\t@Type(type = \"ouiNonType\")\n");
+		            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
+	        	}	            
 	        }
 	        // Si "Dec" est vide, c'est un String
 	        else if (dec == null || dec.isEmpty()) {
