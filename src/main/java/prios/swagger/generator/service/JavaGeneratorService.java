@@ -94,7 +94,7 @@ public class JavaGeneratorService {
 	        }
 	        // Si Lng et Digit sont à 1, c'est un boolean /!\ réctification ça peu aussi être un string de 1 caratère
 	        else if ("1".equals(lng) && "1".equals(digit)) {
-	        	if (nomVariable.toLowerCase().contains("(Oui/Non)") || nomVariable.toLowerCase().contains("(O/N)") ) {
+	        	if (description.toLowerCase().contains("(oui/non)") || description.toLowerCase().contains("(o/n)") ) {
 	        		classCode.append("\t@Type(type = \"ouiNonType\")\n");
 		            classCode.append("\tprivate boolean ").append(nomVariable).append(";\n\n");
 	        	} else {
