@@ -7,6 +7,7 @@ import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.*;
+import com.github.javaparser.javadoc.Javadoc;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -234,6 +235,13 @@ public class SwaggerGeneratorService {
                             description = pair.getValue().toString().replace("\"", "").replace(":", "");  // Retirer les guillemets
                         }
                     }
+                }
+                
+                if (description == null) {
+                	if (field.hasJavaDocComment()) {
+                	    Javadoc javadoc = field.getJavadoc().get();
+                	    description = javadoc.getDescription().toText().trim();
+                	}
                 }
             }
         }
