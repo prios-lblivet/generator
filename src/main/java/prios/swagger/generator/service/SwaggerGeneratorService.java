@@ -2,15 +2,15 @@ package prios.swagger.generator.service;
 
 import org.springframework.stereotype.Service;
 
-import com.github.javaparser.*;
-import com.github.javaparser.ast.*;
-import com.github.javaparser.ast.body.*;
-import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.ast.type.*;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.MemberValuePair;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.javadoc.Javadoc;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class SwaggerGeneratorService {
@@ -20,7 +20,6 @@ public class SwaggerGeneratorService {
         String properties = extractClassProperties(javaClassContent);
         
         final String[] tabInfo = {null, null};  // Tableau pour stocker le titre et la description
-        String tilte;        
         try {
             // Créer une instance de JavaParser
             JavaParser javaParser = new JavaParser();
@@ -79,7 +78,7 @@ public class SwaggerGeneratorService {
 
 	private String generateRoutes(String className) {
 	    return "paths:\n" +
-	           "  /v1/" + toCamelCase(className) + "s:\n" +
+	           "  /v1/" + endPointName(className) + "s:\n" +
 	           "    get:\n" +
 	           "      summary: Récupère la liste des " + className + "\n" +
 	           "      description: Récupère la liste des " + className + "\n" +
@@ -210,7 +209,6 @@ public class SwaggerGeneratorService {
         String swaggerProperty = "        " + fieldName + ":\n";
         
         // Vérifier les annotations sur le champ
-        boolean hasSizeAnnotation = false;
         int maxLength = 255;  // Valeur par défaut pour le maxLength
         String description = null;  // Initialiser la description à null
         
@@ -220,7 +218,6 @@ public class SwaggerGeneratorService {
                 
                 // Vérifier l'annotation @Size pour maxLength
                 if ("Size".equals(normalAnnotation.getNameAsString())) {
-                    hasSizeAnnotation = true;
                     for (MemberValuePair pair : normalAnnotation.getPairs()) {
                         if ("max".equals(pair.getNameAsString())) {
                             maxLength = Integer.parseInt(pair.getValue().toString());
@@ -334,6 +331,14 @@ public class SwaggerGeneratorService {
         int endIndex = Math.min(sb.toString().length(), maxLength);  // On cherche la valeur minimal pour ne pas couper une chaine plus petite que le maxLength
 
         return sb.toString().substring(0, endIndex);  // Couper pour s'assurer que la longueur est respectée
+    }
+    
+    private String endPointName(String className) {
+    	String endPointName = toCamelCase(className);
+    	if (endPointName.endsWith("y")) {
+    	    endPointName = endPointName.substring(0, endPointName.length() - 1) + "ie";
+    	}
+    	return endPointName;
     }
  
     private String toCamelCase(String className) {

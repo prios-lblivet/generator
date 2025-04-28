@@ -125,13 +125,8 @@ public class JavaGeneratorService {
 	            // Si Lng <= 9, c'est un Double, sinon c'est un Float
 	        	Integer decInt = Integer.parseInt(dec);
 		        Integer digitInt = Integer.parseInt(digit);
-	            if (Integer.parseInt(lng) <= 9) {
 		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
-		            classCode.append("\tprivate Double ").append(nomVariable).append(";\n\n");
-	            } else {
-		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
-		            classCode.append("\tprivate Float ").append(nomVariable).append(";\n\n");
-	            }
+		            classCode.append("\tprivate Double ").append(nomVariable).append(";\n\n");	            
 	        }        
 
 	    }
