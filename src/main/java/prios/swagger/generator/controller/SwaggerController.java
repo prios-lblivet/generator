@@ -1,16 +1,19 @@
 package prios.swagger.generator.controller;
 
-import org.springframework.web.bind.annotation.*;
-
-import prios.swagger.generator.service.SwaggerGeneratorService;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collections;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import prios.swagger.generator.service.SwaggerGeneratorService;
 
 @RestController
 @RequestMapping("/api/swagger")

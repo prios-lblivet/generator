@@ -263,7 +263,7 @@ public class SwaggerGeneratorService {
                 swaggerProperty += "          type: boolean\n          description: " + description + "\n          example: 'true'\n";
                 break;
             case "String":
-                swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: '" + generateStringExample(fieldName, maxLength) + "'\n";
+                swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: \"" + generateStringExample(fieldName, maxLength) + "\"\n";
                 break;
             default:
                 // Gestion des types complexes (par exemple, en ajoutant le type directement sans $ref pour les types spéciaux)
@@ -306,7 +306,7 @@ public class SwaggerGeneratorService {
             sb.append("06 64 67 85 32");
         } else if (baseString.contains("address")) {
             // Exemple d'adresse
-            sb.append("123 Rue de l'Exemple, 75001 Paris");
+            sb.append("123 Rue de l'Exemple 75001 Paris");
         } else if (baseString.contains("mail")) {
             // Exemple d'email
             sb.append("exemple@email.com");} 
