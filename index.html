@@ -236,6 +236,14 @@
             font-size: 16px;
             font-weight: bold;
             color: #007bff;
+        }   
+        
+        #loadingTestImport {
+            display: none;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
         }
         
         .loader {
@@ -293,6 +301,7 @@
         <ul class="menu">
             <li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur java</a></li>
             <li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de swagger</a></li>
+            <li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
         </ul>
     </nav>
     <div class="container">
@@ -379,7 +388,28 @@
 			        </div>  
 			    </div>  
 			</div>  
-	   	</div>      
+	   	</div> 
+	   	<div id="test-section" class="content-section">        
+    		<div class="tabs">
+	            <div class="tab active" onclick="openTab(event, 'test_import')">Import</div>
+	            <div class="tab" onclick="openTab(event, 'test_entity')">Entité</div>
+	        </div>
+	        <div class="height">
+	    		<div class="container-flex">
+	    			 <div id="test_import" class="tab-content active">	        	
+			            <textarea id="javaInput" placeholder="Collez votre class ici..."></textarea>
+			             <div class="buttons">
+						    <button id="generateTest" class="button" onclick="generateTest()">🚀 Générer les tests</button>
+						    <p id="loadingTestImport"><span class="loader"></span> Génération en cours...</p>
+				    		<p id="statusTestImport"></p>
+				    	</div> 
+			        </div>
+			        <div id="test_entity" class="tab-content">
+						<textarea id="generatedTestEntity" placeholder="En attente de la génération de l'entité" readonly></textarea>
+					</div>
+		        </div>      
+		    </div>
+        </div>      
     </div>
 </body>
 </html>

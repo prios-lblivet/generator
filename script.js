@@ -277,3 +277,48 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+
+function generateTest() {
+	let javaContent = document.getElementById("javaInput").value;
+	if (!javaContent.trim()) {
+		alert("Veuillez coller votre classe");
+		return;
+	}
+
+	// Afficher le loader avant l'appel à fetch
+	document.getElementById("loadingTestImport").style.display = "block";
+	document.getElementById("statusImport").textContent = ""; // Effacer tout message précédent
+
+	fetch("http://localhost:8091/api/test/generate", {
+	            method: "POST",
+	            headers: { 
+	            	"Content-Type": "text/plain"
+	            	},
+	            body: javaContent
+	        })
+	        .then(response => {
+	            if (response.ok) {
+	                return response.text(); // Lire la réponse
+	            }
+	            return response.text().then(err => { // Lire l'erreur envoyée par le serveur
+	                throw new Error(err.error || 'Erreur lors de la génération');
+	            });
+	        })
+	        .then(data => {
+	            // Afficher l'entité dans le textarea
+	            console.log(data)
+	            document.getElementById("generatedTestEntity").value = data; 
+	            
+	            // Afficher le message de succès
+	            document.getElementById("statusTestImport").textContent = "✅ classes généré avec succès";
+	            document.getElementById("statusTestImport").style.color = "green";
+		
+	            // Masquer le loader
+	            document.getElementById("loadingTestImport").style.display = "none";
+	        })
+	        .catch(error => {
+	            document.getElementById("statusTestImport").textContent = "❌ Erreur : " + error.message;
+	            document.getElementById("statusTestImport").style.color = "red";
+	            document.getElementById("loadingTestImport").style.display = "none"; // Masquer le loader en cas d'erreur
+	        });
+}
