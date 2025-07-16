@@ -11,7 +11,6 @@ function generateSwagger() {
 	// Afficher le loader avant l'appel à fetch
 	document.getElementById("loading").style.display = "block";
 	document.getElementById("status").textContent = ""; // Effacer tout message précédent
-	document.getElementById("downloadButton").style.display = "none";  // Cacher le bouton de téléchargement pendant la génération
 
 	fetch("http://localhost:8091/api/swagger/generate", {
 		method: "POST",
@@ -27,18 +26,15 @@ function generateSwagger() {
 			});
 		})
 		.then(data => {
-			// Afficher le YAML dans le textarea
-			document.getElementById("javaClassInput").value = data.swaggerYaml;  // Mettre le YAML dans le textarea
-			generatedSwaggerYaml = data.swaggerYaml;  // Sauvegarder le YAML dans la variable
-			nameSwaggerYaml = data.fileName
+			console.log(data);
+			nameSwaggerYaml = data.fileName			
+			document.getElementById("generatedYaml").textContent = data.swaggerYaml;
+	       	document.getElementById("generatedJavaEntity").textContent = data.javaEntity;
+	        Prism.highlightAll();
 
 			// Afficher le message de succès
 			document.getElementById("status").textContent = "✅ Swagger généré avec succès : " + nameSwaggerYaml;
 			document.getElementById("status").style.color = "green";
-
-			// Afficher le bouton de téléchargement maintenant
-			document.getElementById("downloadButton").style.display = "inline-block";
-
 			// Masquer le loader
 			document.getElementById("loading").style.display = "none";
 		})
@@ -47,17 +43,6 @@ function generateSwagger() {
 			document.getElementById("status").style.color = "red";
 			document.getElementById("loading").style.display = "none"; // Masquer le loader en cas d'erreur
 		});
-}
-
-function downloadSwagger() {
-	if (!generatedSwaggerYaml) {
-		alert("Aucun fichier Swagger généré.");
-		return;
-	}
-
-	// Créer un Blob avec le YAML et déclencher le téléchargement
-	let blob = new Blob([generatedSwaggerYaml], { type: "text/yaml" });
-	saveAs(blob, nameSwaggerYaml); // saveAs est une méthode de FileSaver.js
 }
 
 function generateJava() {

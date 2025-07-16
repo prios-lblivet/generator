@@ -7,9 +7,13 @@ import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
+import com.github.javaparser.ast.visitor.ModifierVisitor;
+import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.javadoc.Javadoc;
 
 @Service
@@ -339,6 +343,49 @@ public class SwaggerGeneratorService {
     	    endPointName = endPointName.substring(0, endPointName.length() - 1) + "ie";
     	}
     	return endPointName;
+    }
+    
+    public String replaceApiObjectFieldWithComment(String javaClassContent) {
+
+    	JavaParser javaParser = new JavaParser();
+        try {
+            CompilationUnit compilationUnit = javaParser.parse(javaClassContent)
+                .getResult().orElseThrow(() -> new ParseException("Invalid Java code"));
+
+            compilationUnit.accept(new ModifierVisitor<Void>() {
+                @Override
+                public Visitable visit(FieldDeclaration field, Void arg) {
+                    field.getAnnotationByName("ApiObjectField").ifPresent(annotation -> {
+                        String description = "";
+
+                        if (annotation instanceof SingleMemberAnnotationExpr) {
+                            description = ((SingleMemberAnnotationExpr) annotation).getMemberValue().toString().replaceAll("^\"|\"$", "");
+                        } else if (annotation instanceof NormalAnnotationExpr) {
+                            for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
+                                if (pair.getNameAsString().equals("description")) {
+                                    description = pair.getValue().toString().replaceAll("^\"|\"$", "");
+                                    break;
+                                }
+                            }
+                        }
+
+                        field.getAnnotations().remove(annotation);
+
+                        if (!description.isBlank()) {
+                            field.setJavadocComment(new JavadocComment(description));
+                        }
+                    });
+
+                    return super.visit(field, arg);
+                }
+            }, null);
+
+            return compilationUnit.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return javaClassContent;
+        }
     }
  
     private String toCamelCase(String className) {

@@ -357,18 +357,30 @@
     <div class="container">
        
         <div id="swagger-section" class="content-section">
-        
-    		<div class="container-flex">
-				<h2>🛠 Générateur Swagger</h2>
-			    <p>Collez votre classe Java :</p>
-			    <textarea id="javaClassInput" placeholder="Collez votre classe ici..."></textarea>
-			    
-			    <div class="buttons">
-				    <button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer Swagger</button>
-				    <p id="loading"><span class="loader"></span> Génération en cours...</p>
-				    <p id="status"></p>
-				    <button id="downloadButton" class="button" onclick="downloadSwagger()">📥 Télécharger Swagger</button>
-		    	</div> 
+        	<div class="tabs">
+	            <div class="tab active" onclick="openTab(event, 'swagger_import')">Import</div>
+	            <div class="tab" onclick="openTab(event, 'swagger_entity')">Yaml</div>
+	            <div class="tab" onclick="openTab(event, 'java_entity')">Entité</div>
+	        </div>
+	        <div class="height">
+	    		<div class="container-flex">
+	    			 <div id="swagger_import" class="tab-content active">	        	
+			            <textarea id="javaClassInput" placeholder="Collez votre class ici..."></textarea>
+			             <div class="buttons">
+						    <button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer Swagger</button>
+						    <p id="loading"><span class="loader"></span> Génération en cours...</p>
+						    <p id="status"></p>
+				    	</div> 
+			        </div>
+			        <div id="swagger_entity" class="tab-content">
+			          	<pre><code id="generatedYaml" class="code-block language-yaml">En attente de la génération du yaml...</code></pre>
+						<button class="copy-btn" onclick="copyToClipboard('generatedYaml', this)">Copier</button>
+					</div>
+					<div id="java_entity" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaEntity', this)">Copier</button>
+					  	<pre><code id="generatedJavaEntity" class="code-block language-java">En attente de la génération de l'entité...</code></pre>
+					</div>
+		        </div>
 		    </div>
         </div>        
         <div id="java-section" class="content-section active">
