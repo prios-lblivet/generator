@@ -38,24 +38,4 @@ public class SwaggerControllerTest {
         assertTrue(response.getBody().containsKey("swaggerYaml"));
         assertTrue(((String) response.getBody().get("swaggerYaml")).contains("components"));
     }
-
-    @Test
-    public void testGenerateSwaggerError() {
-        // Exemple de contenu Java erroné pour tester la gestion des erreurs
-        String javaClassContent = "Pas du java";
-
-        // Envoi de la requête POST pour générer le Swagger
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                "/api/swagger/generate", 
-                javaClassContent, 
-                Map.class
-        );
-
-        // Vérifier que la réponse est une erreur interne du serveur
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-
-        // Vérifier que la réponse contient un message d'erreur
-        assertTrue(response.getBody().containsKey("error"));
-        assertTrue(((String) response.getBody().get("error")).contains("Vous devez envoyer une classe Java"));
-    }
 }

@@ -26,7 +26,6 @@ function generateSwagger() {
 			});
 		})
 		.then(data => {
-			console.log(data);
 			nameSwaggerYaml = data.fileName			
 			document.getElementById("generatedYaml").textContent = data.swaggerYaml;
 	       	document.getElementById("generatedJavaEntity").textContent = data.javaEntity;
