@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import prios.swagger.generator.response.ApiResponse;
+import prios.swagger.generator.response.ApiTestResponse;
 import prios.swagger.generator.service.TestGeneratorService;
 
 @RestController
@@ -30,21 +31,12 @@ class TestController {
         this.testGeneratorService = testGeneratorService;
     }
     
-    @PostMapping(value = "/generate", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-	public ResponseEntity<String> generateSwagger(@RequestBody String javaClassContent) {
+    @PostMapping(value = "/generate", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ApiTestResponse generateSwagger(@RequestBody String javaClassContent) {
 	    String originalClassName = testGeneratorService.extractClassName(javaClassContent);
 	    
-	    // Vérifier si le contenu est une classe Java valide
-	    if (originalClassName == null || originalClassName.equals("errorJava")) {
-	    	 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-		                .body("error : Vous devez envoyer une classe Java");
-	    }
-	    
-	    try {	    	
-	        return ResponseEntity.ok(testGeneratorService.generateEntity(javaClassContent, originalClassName));
-	    } catch (Exception  e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body("Erreur lors de la génération du Swagger : " + e.getMessage());
-	    }
+	    Map<String, String> response = testGeneratorService.generate(javaClassContent, originalClassName);
+        
+	    return new ApiTestResponse(response.get("entity"), response.get("dto"));
 	}
 }

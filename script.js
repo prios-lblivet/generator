@@ -298,16 +298,18 @@ function generateTest() {
 	        })
 	        .then(response => {
 	            if (response.ok) {
-	                return response.text(); // Lire la réponse
+	                return response.json(); // Lire la réponse
 	            }
-	            return response.text().then(err => { // Lire l'erreur envoyée par le serveur
+	            return response.json().then(err => { // Lire l'erreur envoyée par le serveur
 	                throw new Error(err.error || 'Erreur lors de la génération');
 	            });
 	        })
 	        .then(data => {
 	            // Afficher l'entité dans le textarea
-	            console.log(data)
-	            document.getElementById("generatedTestEntity").value = data; 
+	            console.log(data);
+	            document.getElementById("generatedTestEntity").textContent = data.entity; 
+	            document.getElementById("generatedTestDto").textContent = data.dto; 
+	            Prism.highlightAll();
 	            
 	            // Afficher le message de succès
 	            document.getElementById("statusTestImport").textContent = "✅ classes généré avec succès";
@@ -321,4 +323,19 @@ function generateTest() {
 	            document.getElementById("statusTestImport").style.color = "red";
 	            document.getElementById("loadingTestImport").style.display = "none"; // Masquer le loader en cas d'erreur
 	        });
+}
+
+function copyToClipboard(elementId, button) {
+  const text = document.getElementById(elementId).textContent;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const originalText = button.textContent;
+    button.textContent = "Copié !";
+    button.disabled = true; // facultatif : empêche les clics rapides
+
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.disabled = false;
+    }, 2000);
+  });
 }

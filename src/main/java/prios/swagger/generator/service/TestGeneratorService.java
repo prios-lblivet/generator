@@ -1,5 +1,7 @@
 package prios.swagger.generator.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
@@ -39,12 +41,13 @@ public class TestGeneratorService {
         }
     }
 	
-	public String generateEntity(String javaClassContent, String className) {
-        StringBuilder properties = new StringBuilder();
-
+	public Map<String, String> generate(String javaClassContent, String className) {
+        StringBuilder entity = new StringBuilder();
+        StringBuilder dto = new StringBuilder();
+        
     	String lowerClassName = className.substring(0, 1).toLowerCase() + className.substring(1);
-        properties.append(lowerClassName + " = new " + className + "();\n");
-        properties.append(lowerClassName + "Dto = new " + className + "Dto();\n");
+        entity.append(lowerClassName + " = new " + className + "();\n");
+        dto.append(lowerClassName + "Dto = new " + className + "Dto();\n");
         try {
             // Créer une instance de JavaParser
             JavaParser javaParser = new JavaParser();
@@ -58,13 +61,12 @@ public class TestGeneratorService {
                     ClassOrInterfaceDeclaration classDecl = (ClassOrInterfaceDeclaration) type;
                     
                     // Parcours des champs de la classe
-                    classDecl.getFields().forEach(field -> {
-                        // Passage direct du champ (Field) à la fonction generateSwaggerProperty
-                        String testProperty = generateSwaggerProperty(field, lowerClassName);
-                        
+                    classDecl.getFields().forEach(field -> {       	
                         // Ignorer "serialVersionUID"
                         if (!field.getVariables().get(0).getNameAsString().equals("serialVersionUID")) {
-                            properties.append(testProperty);
+                        	Map<String, String> setter = generateSetter(field, lowerClassName);
+                        	entity.append(setter.get("entity"));
+                            dto.append(setter.get("dto"));
                         }
                     });
                 }
@@ -73,16 +75,20 @@ public class TestGeneratorService {
             e.printStackTrace();
         }
 
-        return properties.toString();
+        Map<String, String> response = new HashMap<>();
+        response.put("entity", entity.toString());
+        response.put("dto", dto.toString());
+        return response;
     } 
 	
 
-	private String generateSwaggerProperty(FieldDeclaration field, String className) {
+	private Map<String, String> generateSetter(FieldDeclaration field, String className) {
     	
     	String fieldName = field.getVariables().get(0).getNameAsString();
     	String capitalizedFieldName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
         String fieldType = field.getElementType().asString();
-        String testProperty = "";
+        String entity = "";
+        String dto = "";
         
         // Vérifier les annotations sur le champ
         int maxLength = 255;  // Valeur par défaut pour le maxLength
@@ -119,45 +125,47 @@ public class TestGeneratorService {
         switch (fieldType) {
             case "Long":
             	Long randomLong = ThreadLocalRandom.current().nextLong(1, maxDigits);
-                testProperty += className + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(" + randomLong + "L);\n";
+            	entity += className + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomLong + "L);\n";
                 break;
             case "Integer":
             	Integer randomInt = ThreadLocalRandom.current().nextInt(1, maxDigits);
-                testProperty += className + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(" + randomInt + ");\n";
+            	entity += className + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomInt + ");\n";
                 break;  
             case "Double":
             	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, (double) maxDigits - maxFractionDigits);
-           	 testProperty += className + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
-        	 testProperty += className + "Dto.set" + capitalizedFieldName + "(" + randomDouble + ");\n";
+            	entity += className + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomDouble + ");\n";
                 break;
             case "Float":
             	Float randomFloat = ThreadLocalRandom.current().nextFloat();
-              	 testProperty += className + ".set" + capitalizedFieldName + "(" + randomFloat + ");\n";
-               	 testProperty += className + "Dto.set" + capitalizedFieldName + "(" + randomFloat + ");\n";
+            	entity += className + ".set" + capitalizedFieldName + "(" + randomFloat + ");\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomFloat + ");\n";
                 break; 
             case "Date":
-                testProperty += className + ".set" + capitalizedFieldName + "(date);\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(localDateTime);\n";
+            	entity += className + ".set" + capitalizedFieldName + "(date);\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(localDateTime);\n";
                 break;
             case "boolean":
-                testProperty += className + ".set" + capitalizedFieldName + "(true);\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(true);\n";
+            	entity += className + ".set" + capitalizedFieldName + "(true);\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(true);\n";
                 break;
             case "String":
             	String exemple = generateStringExample(fieldName, maxLength);
-                testProperty += className + ".set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
+            	entity += className + ".set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
                 break;
             default:
-                testProperty += className + ".set" + capitalizedFieldName + "(new " + fieldType + "());\n";
-                testProperty += className + "Dto.set" + capitalizedFieldName + "(new " + fieldType + "Dto());\n";
+            	entity += className + ".set" + capitalizedFieldName + "(new " + fieldType + "());\n";
+            	dto += className + "Dto.set" + capitalizedFieldName + "(new " + fieldType + "Dto());\n";
                 break;
         }
-        return testProperty;
+        Map<String, String> result = new HashMap<>();
+        result.put("entity", entity);
+        result.put("dto", dto);
+        return result;
     }
-
 	
 	 private String generateStringExample(String name, int maxLength) {
 	        StringBuilder sb = new StringBuilder(maxLength);
