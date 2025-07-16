@@ -105,14 +105,15 @@ function generateJava() {
 	        })
 	        .then(data => {
 	            // Afficher le YAML dans le textarea
-	            document.getElementById("generatedEntity").value = data.entity; 
-	            document.getElementById("generatedTable").value = data.table;
-	            document.getElementById("generatedMapper").value = data.mapper;
-	            document.getElementById("generatedController").value = data.controller;
-	            document.getElementById("generatedService").value = data.service;
-	            document.getElementById("generatedServiceImpl").value = data.serviceImpl;
-	            document.getElementById("generatedRepository").value = data.repository;
-	            document.getElementById("generatedSwagger").value = data.swagger;
+	            document.getElementById("generatedEntity").textContent = data.entity; 
+	            document.getElementById("generatedTable").textContent = data.table;
+	            document.getElementById("generatedMapper").textContent = data.mapper;
+	            document.getElementById("generatedController").textContent = data.controller;
+	            document.getElementById("generatedService").textContent = data.service;
+	            document.getElementById("generatedServiceImpl").textContent = data.serviceImpl;
+	            document.getElementById("generatedRepository").textContent = data.repository;
+	            document.getElementById("generatedSwagger").textContent = data.swagger;
+	            Prism.highlightAll();
 	            
 	            // Afficher le message de succès
 	            document.getElementById("statusImport").textContent = "✅ classes généré avec succès";

@@ -71,12 +71,12 @@ public class JavaGeneratorService {
 	        String lng = rowMap.get("Lng");
 	        String digit = rowMap.get("Digit");
 	        
-	        if (embedded.equals("HistoryManagementA"))
-	        	description = "Gestion Utilisateur";
-	   
 	        String embeddedName = nomVariable.split("\\.")[0];
 	        // verifier si on a pas un embedded et si il est pas déjà dans la liste
 	        if (!(embedded != null && !embedded.isEmpty() && embeddedClasses.contains(embeddedName))) {
+		        if (embedded.equals("HistoryManagementA") || embedded.equals("HistoryManagement"))
+		        	description = "Gestion Utilisateur";
+		   
 	        	// Ajouter un champ avec annotation
 		        classCode.append("\t/**\n");
 		        classCode.append("\t* ").append(description).append("\n");

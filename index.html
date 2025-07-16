@@ -9,6 +9,7 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes@1.9.0/themes/prism-one-light.css" />
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
 
       <style>
         body {
@@ -412,28 +413,36 @@
 				    	</div> 
 			        </div>
 			        <div id="entity" class="tab-content">
-			            <textarea id="generatedEntity" placeholder="En attente de la génération de l'entité" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedEntity', this)">Copier</button>
+			            <pre><code id="generatedEntity" class="code-block language-java">En attente de la génération de l'entité</code></pre>
 			        </div>
 			        <div id="table" class="tab-content">
-			            <textarea id="generatedTable" placeholder="En attente de la génération de l'entité table" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedTable', this)">Copier</button>
+			            <pre><code id="generatedTable" class="code-block language-java">En attente de la génération de l'entité table</code></pre>
 			        </div>
 			        <div id="mapper" class="tab-content">
-			            <textarea id="generatedMapper" placeholder="En attente de la génération du mapper" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedMapper', this)">Copier</button>
+			            <pre><code id="generatedMapper" class="code-block language-java">En attente de la génération du mapper</code></pre>
 			        </div>
 			        <div id="controller" class="tab-content">
-			            <textarea id="generatedController" placeholder="En attente de la génération du controller" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedController', this)">Copier</button>
+			            <pre><code id="generatedController" class="code-block language-java">En attente de la génération du controller</code></pre>
 			        </div>
 			        <div id="service" class="tab-content">
-			            <textarea id="generatedService" placeholder="En attente de la génération du service" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedService', this)">Copier</button>
+			            <pre><code id="generatedService" class="code-block language-java">En attente de la génération du service</code></pre>
 			        </div>
 			        <div id="serviceImpl" class="tab-content">
-			            <textarea id="generatedServiceImpl" placeholder="En attente de la génération de l'implémentation du service" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedServiceImpl', this)">Copier</button>
+			            <pre><code id="generatedServiceImpl" class="code-block language-java">En attente de la génération de l'implémentation du service</code></pre>
 			        </div>
 			        <div id="repository" class="tab-content">
-			            <textarea id="generatedRepository" placeholder="En attente de la génération du repository" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedRepository', this)">Copier</button>
+			            <pre><code id="generatedRepository" class="code-block language-java">En attente de la génération du repository</code></pre>
 			        </div>  
 			        <div id="swagger" class="tab-content">
-			            <textarea id="generatedSwagger" placeholder="En attente de la génération du swagger" readonly></textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedSwagger', this)">Copier</button>
+			            <pre><code id="generatedSwagger" class="code-block language-yaml">En attente de la génération du swagger</code></pre>
 			        </div>  
 			    </div>  
 			</div>  
@@ -459,8 +468,7 @@
 						<button class="copy-btn" onclick="copyToClipboard('generatedTestEntity', this)">Copier</button>
 					</div>
 					<div id="test_dto" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedTestDto', this)">Copier</button>						
-					
+						<button class="copy-btn" onclick="copyToClipboard('generatedTestDto', this)">Copier</button>
 					  	<pre><code id="generatedTestDto" class="code-block language-java">En attente de la génération du DTO...</code></pre>
 					</div>
 		        </div>      
