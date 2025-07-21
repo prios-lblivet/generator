@@ -286,10 +286,10 @@ public class SwaggerGeneratorService {
         // Liste des types complexes définis directement
         String[] specialTypes = {
             "CommonExchange", "BuildingExchange", "BuildingsDeliveryOrderExchange", "CellsTourLoadingExchange",
-            "DeliveredThirdPartyTourLoadingExchange", "DeliveryInformationDeliveryOrderExchange", "DeliveryInformationExchange",
+            "DeliveredThirdPartyTourLoadingExchange", "DeliveryInformationListExchange", "DeliveryInformationExchange",
             "GeneralInformationThirdParty", "QuantityTourLoadingExchange", "SiloExchange", "SilosDeliveryOrderExchange",
             "SupplementationListTourExchange", "SupplementationTourExchange", "SupplementationTourLoadingExchange",
-            "VehicleBoxesTourLoadingExchange", "VeterinarianDeliveryOrderExchange", "HistoryManagementA"
+            "VehicleBoxesTourLoadingExchange", "HistoryManagementA", "HistoryManagement"
         };
         for (String specialType : specialTypes) {
             if (specialType.equals(type)) {

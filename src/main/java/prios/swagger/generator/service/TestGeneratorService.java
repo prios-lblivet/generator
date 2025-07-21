@@ -134,7 +134,7 @@ public class TestGeneratorService {
             	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomInt + ");\n";
                 break;  
             case "Double":
-            	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, (double) maxDigits - maxFractionDigits);
+            	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, maxDigits);
             	entity += className + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
             	dto += className + "Dto.set" + capitalizedFieldName + "(" + randomDouble + ");\n";
                 break;
