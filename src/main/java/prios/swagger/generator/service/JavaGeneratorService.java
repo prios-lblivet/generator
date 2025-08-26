@@ -92,6 +92,7 @@ public class JavaGeneratorService {
 		            classCode.append("\tprivate ").append(embedded).append(" ").append(embeddedName).append(";\n\n");  
 	        	}  
 	        }
+	        
 	        // Si Lng et Digit sont à 1, c'est un boolean /!\ réctification ça peu aussi être un string de 1 caratère
 	        else if ("1".equals(lng) && "1".equals(digit)) {
 	        	if (description.toLowerCase().contains("(oui/non)") || description.toLowerCase().contains("(o/n)") ) {
@@ -102,8 +103,14 @@ public class JavaGeneratorService {
 		            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
 	        	}	            
 	        }
+	        // Si Lng et Digit sont à 8 et que le champs contient le nom date c'est une date
+	        else if ("8".equals(lng) && "8".equals(digit) && nomVariable.contains("Date")) {
+	        	classCode.append("\t@Convert(converter = DateConverter.class)\n");
+		        classCode.append("\tprivate Date ").append(nomVariable).append(";\n\n");
+	        	            
+	        }
 	        // Si "Dec" est vide, c'est un String
-	        else if (dec == null || dec.isEmpty()) {
+	        else if (dec == null || dec.isEmpty() || dec.equals("")) {
 	            classCode.append("\t@Size(max = ").append(lng).append(")\n");
 	            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
 	        }
@@ -127,10 +134,8 @@ public class JavaGeneratorService {
 		        Integer digitInt = Integer.parseInt(digit);
 		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
 		            classCode.append("\tprivate Double ").append(nomVariable).append(";\n\n");	            
-	        }        
-
-	    }
-	    
+	        }
+	    }	    
 
         if (embeddedClasses.contains("historyManagement")) {
         	classCode.append("\t/**\n");
