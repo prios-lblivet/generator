@@ -247,6 +247,14 @@
             font-weight: bold;
             color: #007bff;
         }
+		
+		#loadingExcel {
+		    display: none;
+		    margin-top: 15px;
+		    font-size: 16px;
+		    font-weight: bold;
+		    color: #007bff;
+		}  
         
         .loader {
             border: 4px solid #f3f3f3;
@@ -330,15 +338,22 @@
 		}	
 		
 		.code-input {
-  background-color: #f5f2f0;
-  color: #2d2d2d;
-  font-family: 'Fira Code', 'Consolas', monospace;
-  font-size: 14px;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-}
+		  background-color: #f5f2f0;
+		  color: #2d2d2d;
+		  font-family: 'Fira Code', 'Consolas', monospace;
+		  font-size: 14px;
+		  padding: 12px;
+		  border: 1px solid #ccc;
+		  border-radius: 8px;
+		  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+		}
+		
+		.api-import {
+			display: flex;
+			width: 100%;
+			height: 88%;
+			gap: 15px;
+		}
 									        
     </style>
 </head>
@@ -351,7 +366,8 @@
         <ul class="menu">
             <li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur java</a></li>
             <li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de swagger</a></li>
-            <li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
         </ul>
     </nav>
     <div class="container">
@@ -360,7 +376,7 @@
         	<div class="tabs">
 	            <div class="tab active" onclick="openTab(event, 'swagger_import')">Import</div>
 	            <div class="tab" onclick="openTab(event, 'swagger_entity')">Yaml</div>
-	            <div class="tab" onclick="openTab(event, 'java_entity')">Entité</div>
+				<div class="tab" onclick="openTab(event, 'java_entity')">Entité</div>
 	        </div>
 	        <div class="height">
 	    		<div class="container-flex">
@@ -485,7 +501,32 @@
 					</div>
 		        </div>      
 		    </div>
-        </div>      
+        </div>  
+		<div id="excel-section" class="content-section">
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'excel_import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'excel_result')">Résultat</div>
+			</div>  
+			<div class="height">
+				<div class="container-flex">
+					<div id="excel_import" class="tab-content active">
+						<div class="api-import">
+							<textarea id="excelJavaClassInput" placeholder="Collez ici votre class..."></textarea>						
+							<textarea id="excelJavaTableInput" placeholder="Collez ici votre class table..."></textarea>
+					 	</div>        	
+			             <div class="buttons">
+						    <button id="generateTest" class="button" onclick="generateExcel()">🚀 Générer les tests</button>
+						    <p id="loadingExcel"><span class="loader"></span> Génération en cours...</p>
+				    		<p id="statusExcel"></p>
+				    	</div>
+			        </div>
+			        <div id="excel_result" class="tab-content">
+			          	<textarea id="generatedExcel">En attente de la génération de l'excel...</textarea>
+						<button class="copy-btn" onclick="copyToClipboard('generatedExcel', this)">Copier</button>
+					</div>
+			    </div>      
+			</div>  
+		</div>    
     </div>
 </body>
 </html>

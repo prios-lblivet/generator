@@ -113,6 +113,67 @@ function generateJava() {
 	        });
 }
 
+
+function generateExcel() {
+	let classContent = document.getElementById("excelJavaClassInput").value;
+	if (!classContent.trim()) {
+		alert("Veuillez coller votre class");
+		return;
+	}
+
+	let tableContent = document.getElementById("excelJavaTableInput").value;
+	if (!tableContent.trim()) {
+		alert("Veuillez coller votre table.");
+		return;
+	}
+
+	// Afficher le loader avant l'appel à fetch
+	document.getElementById("loadingExcel").style.display = "block";
+	document.getElementById("statusExcel").textContent = ""; // Effacer tout message précédent
+
+	fetch("http://localhost:8091/api/excel/generate", {
+	        method: "POST",
+	        headers: {
+				"Content-Type": "application/json"
+			},	            
+        	body: JSON.stringify({
+           		classContent: classContent,
+           		tableContent: tableContent
+           		})
+	        })
+	        .then(response => {
+	            if (response.ok) {
+	                return response.json(); // Lire la réponse JSON
+	            }
+	            return response.json().then(err => { // Lire l'erreur envoyée par le serveur
+	                throw new Error(err.error || 'Erreur lors de la génération');
+	            });
+	        })
+	        .then(data => {
+	            // Afficher le YAML dans le textarea
+	            let csv;
+			
+			     data.forEach(row => {
+			        csv += `${row.niveau}\t${row.taille}\t${row.nullable}\t${row.type}\t${row.nom}\t${row.description}\t${row.table}\t${row.colonne}\n`;
+			    });
+			
+			    // Afficher dans un textarea pour copie facile
+			    document.getElementById("generatedExcel").textContent = csv; 
+			    			    	            
+	            // Afficher le message de succès
+	            document.getElementById("statusExcel").textContent = "✅ excel généré avec succès";
+	            document.getElementById("statusExcel").style.color = "green";
+		
+	            // Masquer le loader
+	            document.getElementById("loadingExcel").style.display = "none";
+	        })
+	        .catch(error => {
+	            document.getElementById("statusExcel").textContent = "❌ Erreur : " + error.message;
+	            document.getElementById("statusExcel").style.color = "red";
+	            document.getElementById("loadingExcel").style.display = "none"; // Masquer le loader en cas d'erreur
+	        });
+}
+
 function switchSection(evt, sectionId) {
 	let sections = document.getElementsByClassName("content-section");
 	for (let i = 0; i < sections.length; i++) {
