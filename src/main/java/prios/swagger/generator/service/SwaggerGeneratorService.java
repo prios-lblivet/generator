@@ -264,7 +264,7 @@ public class SwaggerGeneratorService {
                 swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
                 break;
             case "boolean":
-                swaggerProperty += "          type: boolean\n          description: " + description + "\n          example: 'true'\n";
+                swaggerProperty += "          type: boolean\n          description: " + description + "\n          example: true\n";
                 break;
             case "String":
                 swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: \"" + generateStringExample(fieldName, maxLength) + "\"\n";
