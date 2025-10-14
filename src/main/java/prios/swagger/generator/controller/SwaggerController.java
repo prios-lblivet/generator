@@ -24,14 +24,16 @@ class SwaggerController {
     @PostMapping(value = "/generate", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ApiSwaggerResponse generateSwagger(@RequestBody String javaClassContent) {
 	    String originalClassName = swaggerGeneratorService.extractClassName(javaClassContent);
-	        
+
 	    String swaggerName = swaggerGeneratorService.toSnakeCase(originalClassName); // Convertir en snake_case
 	    String fileName = swaggerName + ".yaml"; // Nom dynamique
 	    String swaggerYaml = swaggerGeneratorService.generateSwaggerYaml(javaClassContent);
-	    String entity = swaggerGeneratorService.replaceApiObjectFieldWithComment(javaClassContent);
-	    
-	    
-      
+	    String entity = "";
+	    if(originalClassName.contains("Table")){
+		    entity = swaggerGeneratorService.replaceAttributeOverrides(javaClassContent);
+	    } else {
+		    entity = swaggerGeneratorService.replaceApiObjectFieldWithComment(javaClassContent);
+	    } 
 	    return new ApiSwaggerResponse(swaggerYaml, entity , fileName );
 	}
 }

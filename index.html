@@ -1,532 +1,626 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur Swagger</title>
-    <link rel="icon" type="image/png" href="https://www.prios.fr/wp-content/uploads/2020/07/cropped-logo-digital-32x32.png"> <!-- Remplacez l'URL par celle de votre favicon -->
-    <script src="script.js"></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Générateur Swagger</title>
+	<link rel="icon" type="image/png"
+		href="https://www.prios.fr/wp-content/uploads/2020/07/cropped-logo-digital-32x32.png">
+	<!-- Remplacez l'URL par celle de votre favicon -->
+	<script src="script.js"></script>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes@1.9.0/themes/prism-one-light.css" />
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
 
-      <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            text-align: center;
-        }
-
-        /* Barre de navigation */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: white;
-            padding: 20px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Logo à gauche */
-        nav .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: rgb(41, 68, 113);
-            display: flex;
-            align-items: center;
-        }
-
-        nav .logo img {
-            margin-right: 10px;
-        }
-
-        /* Menu à droite */
-        nav .menu {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        nav .menu li {
-            margin-left: 20px;
-        }
-
-        nav .menu li a {
-            text-decoration: none;
-            color: rgb(41, 68, 113);
-            font-size: 18px;
-            padding: 10px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            position: relative;
-        }
-
-        nav .menu li a:hover::after {
-		    content: '';
-		    position: absolute;
-		    bottom: 0;
-		    left: 0;
-		    width: 100%;
-		    height: 3px;
-		    background-color: rgb(41, 68, 113); /* Couleur du trait au survol */
-		    transition: all 0.3s ease;
+	<style>
+		body {
+			font-family: 'Arial', sans-serif;
+			background-color: #f4f4f4;
+			margin: 0;
+			text-align: center;
 		}
 
-        /* Ajouter un trait en dessous de l'élément actif */
-        nav .menu li a.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: rgb(41, 68, 113); /* Couleur du trait */
-        }
-        
-        h2 {
-		    color: rgb(41, 68, 113);
-        }
-        
-        /* Style des onglets */
+		/* Barre de navigation */
+		nav {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			background-color: white;
+			padding: 20px 20px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+
+		/* Logo à gauche */
+		nav .logo {
+			font-size: 24px;
+			font-weight: bold;
+			color: rgb(41, 68, 113);
+			display: flex;
+			align-items: center;
+		}
+
+		nav .logo img {
+			margin-right: 10px;
+		}
+
+		/* Menu à droite */
+		nav .menu {
+			display: flex;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		nav .menu li {
+			margin-left: 20px;
+		}
+
+		nav .menu li a {
+			text-decoration: none;
+			color: rgb(41, 68, 113);
+			font-size: 18px;
+			padding: 10px;
+			border-radius: 5px;
+			transition: background-color 0.3s ease;
+			position: relative;
+		}
+
+		nav .menu li a:hover::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 3px;
+			background-color: rgb(41, 68, 113);
+			/* Couleur du trait au survol */
+			transition: all 0.3s ease;
+		}
+
+		/* Ajouter un trait en dessous de l'élément actif */
+		nav .menu li a.active::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 3px;
+			background-color: rgb(41, 68, 113);
+			/* Couleur du trait */
+		}
+
+		h2 {
+			color: rgb(41, 68, 113);
+		}
+
+		/* Style des onglets */
 		.tabs {
-		    display: flex;
-		    justify-content: space-around;
-		    margin-bottom: 20px;
+			display: flex;
+			justify-content: space-around;
+			margin-bottom: 20px;
 		}
-		
+
 		.tab {
-		    padding: 10px 20px;
-		    font-size: 16px;
-		    cursor: pointer;
-		    color: rgb(41, 68, 113);
-		    background-color: #f4f4f4;
-		    border-radius: 5px;
-		    transition: background-color 0.3s;
+			padding: 10px 20px;
+			font-size: 16px;
+			cursor: pointer;
+			color: rgb(41, 68, 113);
+			background-color: #f4f4f4;
+			border-radius: 5px;
+			transition: background-color 0.3s;
 		}
-		
+
 		/* Style pour l'onglet actif */
 		.tab.active {
-		    background-color: rgb(41, 68, 113);
-		    color: white;
-		    border-bottom: 3px solid white; /* Ajouter une barre sous l'onglet actif */
+			background-color: rgb(41, 68, 113);
+			color: white;
+			border-bottom: 3px solid white;
+			/* Ajouter une barre sous l'onglet actif */
 		}
-		
+
 		/* Style pour les onglets non actifs au survol */
 		.tab:hover {
-		    background-color: #e0e0e0;
+			background-color: #e0e0e0;
 		}
-		
+
 		/* Contenu des onglets */
 		.tab-content {
-		    display: none;
-		    border-radius: 5px;
+			display: none;
+			border-radius: 5px;
 		}
-		
+
 		/* Contenu actif d'un onglet */
 		.tab-content.active {
-		    display: flex;
-		    flex-direction: column;
-		    height: 100%;
-		    position: relative;
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+			position: relative;
 		}
-        
-        /* Container principal */
-        .container {
-		    background: white;
-		    padding: 20px;
-		    margin: 20px;
-		    border-radius: 10px;
-		    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);		   
-		    flex-direction: column;
-		    height: calc(100vh - 150px); /* Hauteur de la fenêtre moins la hauteur du nav et marge */
-		    justify-content: flex-start; /* Cela pousse le contenu vers le bas */
-		}		
-		
+
+		/* Container principal */
+		.container {
+			background: white;
+			padding: 20px;
+			margin: 20px;
+			border-radius: 10px;
+			box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+			flex-direction: column;
+			height: calc(100vh - 150px);
+			/* Hauteur de la fenêtre moins la hauteur du nav et marge */
+			justify-content: flex-start;
+			/* Cela pousse le contenu vers le bas */
+		}
+
 		.container-flex {
 			display: flex;
-		    flex-direction: column;
-		    height: 100%;
+			flex-direction: column;
+			height: 100%;
 		}
-        .content-section { 
-            display: none; 
-		    height: 100%;
-        }
 
-        .content-section.active { 
-            display: block; 
-        }
+		.content-section {
+			display: none;
+			height: 100%;
+		}
 
-       /* Style de la ligne qui contient les deux colonnes */
+		.content-section.active {
+			display: block;
+		}
+
+		/* Style de la ligne qui contient les deux colonnes */
 		.row {
-		    display: flex;
-		    justify-content: space-between; /* Cela espace les deux colonnes aux extrémités */
-		    align-items: center; /* Aligner les éléments en bas */
-		}
-				
-		.col-left {
-		    display: flex;
-		    flex-direction: column;
-		    align-items: flex-start;
-		}
-		
-		.col-right {
-		    display: flex;
-		    align-items: flex-end;
-		    align-items: center;
+			display: flex;
+			justify-content: space-between;
+			/* Cela espace les deux colonnes aux extrémités */
+			align-items: center;
+			/* Aligner les éléments en bas */
 		}
 
-        textarea {
-		    width: 100%;
-		    height: 100%; /* Utiliser toute la hauteur disponible restante */
-		    border: 1px solid #ccc;
-		    border-radius: 5px;
-		    resize: none; /* Désactive le redimensionnement */
-		    margin-bottom: 20px; /* Un peu de marge en bas pour le bouton */
-		    flex-grow: 1; /* Le textarea prend tout l'espace restant */
+		.col-left {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
 		}
-		
-		 .input {
-		    width: 300px;
-		    height: 40px;
-		    font-size: 16px;
-		    border: 1px solid #ccc;
-		    border-radius: 5px;
-		    resize: none; /* Désactive le redimensionnement */
-		    margin-bottom: 20px; /* Un peu de marge en bas pour le bouton */
+
+		.col-right {
+			display: flex;
+			align-items: flex-end;
+			align-items: center;
 		}
-		
+
+		textarea {
+			width: 100%;
+			height: 100%;
+			/* Utiliser toute la hauteur disponible restante */
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			resize: none;
+			/* Désactive le redimensionnement */
+			margin-bottom: 20px;
+			/* Un peu de marge en bas pour le bouton */
+			flex-grow: 1;
+			/* Le textarea prend tout l'espace restant */
+		}
+
+		.input {
+			width: 300px;
+			height: 40px;
+			font-size: 16px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			resize: none;
+			/* Désactive le redimensionnement */
+			margin-bottom: 20px;
+			/* Un peu de marge en bas pour le bouton */
+		}
+
 		.height {
-		    height: calc(100vh - 220px);
-		    justify-content: flex-start;
-		    
+			height: calc(100vh - 220px);
+			justify-content: flex-start;
+
 		}
 
 		.buttons {
-		     margin-top: auto; /* Cela pousse la div .buttons vers le bas */		    
+			margin-top: auto;
+			/* Cela pousse la div .buttons vers le bas */
 		}
 
-        .button {
-		    background-color: rgb(41, 68, 113);
-		    color: white;
-		    border: none;
-		    padding: 12px 20px;
-		    font-size: 16px;
-		    border-radius: 5px;
-		    cursor: pointer;
-		    margin-top: auto; /* Cela pousse le bouton vers le bas */
-		    transition: background-color 0.3s;
+		.button {
+			background-color: rgb(41, 68, 113);
+			color: white;
+			border: none;
+			padding: 12px 20px;
+			font-size: 16px;
+			border-radius: 5px;
+			cursor: pointer;
+			margin-top: auto;
+			/* Cela pousse le bouton vers le bas */
+			transition: background-color 0.3s;
 		}
 
-        .button:hover {
-            background-color: #0056b3;
-        }
-        
-        #loading {
-            display: none;
-            margin-top: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #007bff;
-        }
-        
-        #loadingImport {
-            display: none;
-            margin-top: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #007bff;
-        }   
-        
-        #loadingTestImport {
-            display: none;
-            margin-top: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #007bff;
-        }
-		
+		.button:hover {
+			background-color: #0056b3;
+		}
+
+		#loading {
+			display: none;
+			margin-top: 15px;
+			font-size: 16px;
+			font-weight: bold;
+			color: #007bff;
+		}
+
+		#loadingImport {
+			display: none;
+			margin-top: 15px;
+			font-size: 16px;
+			font-weight: bold;
+			color: #007bff;
+		}
+
+		#loadingTestImport {
+			display: none;
+			margin-top: 15px;
+			font-size: 16px;
+			font-weight: bold;
+			color: #007bff;
+		}
+
 		#loadingExcel {
-		    display: none;
-		    margin-top: 15px;
-		    font-size: 16px;
-		    font-weight: bold;
-		    color: #007bff;
-		}  
-        
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #status {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        #downloadButton {
-            display: none;  /* Cacher le bouton au début */
-            margin-top: 15px;
-        }
-        
-        #dropZone {
-		    border: 2px dashed rgb(41, 68, 113);
-		    padding: 20px;
-		    text-align: center;
-		    cursor: pointer;
-		    background-color: #f4f4f4;
-		    border-radius: 10px;
-		    transition: background-color 0.3s ease;
+			display: none;
+			margin-top: 15px;
+			font-size: 16px;
+			font-weight: bold;
+			color: #007bff;
 		}
-		
+
+		.loader {
+			border: 4px solid #f3f3f3;
+			border-top: 4px solid #007bff;
+			border-radius: 50%;
+			width: 25px;
+			height: 25px;
+			animation: spin 1s linear infinite;
+			display: inline-block;
+			margin-right: 10px;
+		}
+
+		@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		#status {
+			margin-top: 15px;
+			font-weight: bold;
+		}
+
+		#downloadButton {
+			display: none;
+			/* Cacher le bouton au début */
+			margin-top: 15px;
+		}
+
+		#dropZone {
+			border: 2px dashed rgb(41, 68, 113);
+			padding: 20px;
+			text-align: center;
+			cursor: pointer;
+			background-color: #f4f4f4;
+			border-radius: 10px;
+			transition: background-color 0.3s ease;
+		}
+
 		#dropZone:hover {
-		    background-color: #e0e0e0;
+			background-color: #e0e0e0;
 		}
-		
+
 		#dropZone.dragover {
-		    background-color: #d3e3fd;
+			background-color: #d3e3fd;
 		}
-						
-		.copy-btn {		
-		  position: absolute;
-		  top: 18px;
-		  right: 20px;
-		  background-color: #0000;
-		  color: lightgrey;
-		  border: none;
-		  padding: 6px 12px;
-		  border-radius: 6px;
-		  cursor: pointer;
-		  font-size: 12px;
-		  margin-top: 6px;
-		  margin-left: auto;
+
+		.copy-btn {
+			position: absolute;
+			top: 18px;
+			right: 20px;
+			background-color: #0000;
+			color: lightgrey;
+			border: none;
+			padding: 6px 12px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 12px;
+			margin-top: 6px;
+			margin-left: auto;
 		}
-		.copy-btn:hover {		  
-		  color: grey;
+
+		.copy-btn:hover {
+			color: grey;
 		}
-		
+
 		.copy-message {
-		  position: fixed;
-		  top: 20px;
-		  right: 20px;
-		  background-color: #4caf50;
-		  color: white;
-		  padding: 8px 14px;
-		  border-radius: 8px;
-		  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-		  font-size: 16px;
-		  z-index: 9999;
-		  opacity: 1;
-		  transition: opacity 0.5s ease;
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			background-color: #4caf50;
+			color: white;
+			padding: 8px 14px;
+			border-radius: 8px;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+			font-size: 16px;
+			z-index: 9999;
+			opacity: 1;
+			transition: opacity 0.5s ease;
 		}
-		
+
 		.copy-message.fade-out {
-		  opacity: 0;
-		}	
-		
-		.code-input {
-		  background-color: #f5f2f0;
-		  color: #2d2d2d;
-		  font-family: 'Fira Code', 'Consolas', monospace;
-		  font-size: 14px;
-		  padding: 12px;
-		  border: 1px solid #ccc;
-		  border-radius: 8px;
-		  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+			opacity: 0;
 		}
-		
+
+		.code-input {
+			background-color: #f5f2f0;
+			color: #2d2d2d;
+			font-family: 'Fira Code', 'Consolas', monospace;
+			font-size: 14px;
+			padding: 12px;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+			box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
 		.api-import {
 			display: flex;
 			width: 100%;
 			height: 88%;
 			gap: 15px;
 		}
-									        
-    </style>
+		
+		/* === Ajustement pour que les textareas occupent tout l’espace restant === */
+		.textareas {
+			gap: 10px;
+			margin-bottom: 10px;
+			flex: 1;
+			height: 100%;
+			display: flex;
+		}
+
+		.textareas textarea {
+			flex: 1;
+			height: 100%;
+			resize: none;
+			width: 50%;
+			box-sizing: border-box;
+		}
+
+
+	</style>
 </head>
+
 <body>
 	<!-- Navigation -->
-    <nav>
-        <div class="logo">
-            <img src="https://www.prios.fr/wp-content/uploads/2020/07/pr_logo_priosblue-04-150x23.png" alt="Logo"> 
-        </div>
-        <ul class="menu">
-            <li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur java</a></li>
-            <li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de swagger</a></li>
+	<nav>
+		<div class="logo">
+			<img src="https://www.prios.fr/wp-content/uploads/2020/07/pr_logo_priosblue-04-150x23.png" alt="Logo">
+		</div>
+		<ul class="menu">
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur
+					java</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de
+					swagger</a></li>
 			<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
 			<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
-        </ul>
-    </nav>
-    <div class="container">
-       
-        <div id="swagger-section" class="content-section">
-        	<div class="tabs">
-	            <div class="tab active" onclick="openTab(event, 'swagger_import')">Import</div>
-	            <div class="tab" onclick="openTab(event, 'swagger_entity')">Yaml</div>
+		</ul>
+	</nav>
+	<div class="container">
+
+		<div id="swagger-section" class="content-section">
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'swagger_import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'swagger_entity')">Yaml</div>
 				<div class="tab" onclick="openTab(event, 'java_entity')">Entité</div>
-	        </div>
-	        <div class="height">
-	    		<div class="container-flex">
-	    			 <div id="swagger_import" class="tab-content active">	        	
-			            <textarea id="javaClassInput" placeholder="Collez votre class ici..."></textarea>
-			             <div class="buttons">
-						    <button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer Swagger</button>
-						    <p id="loading"><span class="loader"></span> Génération en cours...</p>
-						    <p id="status"></p>
-				    	</div> 
-			        </div>
-			        <div id="swagger_entity" class="tab-content">
-			          	<pre><code id="generatedYaml" class="code-block language-yaml">En attente de la génération du yaml...</code></pre>
+			</div>
+			<div class="height">
+				<div class="container-flex">
+					<div id="swagger_import" class="tab-content active">
+						<textarea id="javaClassInput" placeholder="Collez votre class ici..."></textarea>
+						<div class="buttons">
+							<button id="generateButton" class="button" onclick="generateSwagger()">🚀 Générer
+								Swagger</button>
+							<p id="loading"><span class="loader"></span> Génération en cours...</p>
+							<p id="status"></p>
+						</div>
+					</div>
+					<div id="swagger_entity" class="tab-content">
+						<pre><code id="generatedYaml" class="code-block language-yaml">En attente de la génération du yaml...</code></pre>
 						<button class="copy-btn" onclick="copyToClipboard('generatedYaml', this)">Copier</button>
 					</div>
 					<div id="java_entity" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedJavaEntity', this)">Copier</button>
-					  	<pre><code id="generatedJavaEntity" class="code-block language-java">En attente de la génération de l'entité...</code></pre>
+						<pre><code id="generatedJavaEntity" class="code-block language-java">En attente de la génération de l'entité...</code></pre>
 					</div>
-		        </div>
-		    </div>
-        </div>        
-        <div id="java-section" class="content-section active">
-	        <div class="tabs">
-	            <div class="tab active" onclick="openTab(event, 'import')">Import</div>
-	            <div class="tab" onclick="openTab(event, 'entity')">Entité</div>
-	            <div class="tab" onclick="openTab(event, 'table')">Table</div>
-	            <div class="tab" onclick="openTab(event, 'mapper')">Mapper</div>
-	            <div class="tab" onclick="openTab(event, 'controller')">Controller</div>
-	            <div class="tab" onclick="openTab(event, 'service')">Service</div>
-	            <div class="tab" onclick="openTab(event, 'serviceImpl')">ServiceImpl</div>
-	            <div class="tab" onclick="openTab(event, 'repository')">Repository</div>
-	            <div class="tab" onclick="openTab(event, 'swagger')">Swagger</div>
-	        </div>
-	        
-    		<div class="height">
-	    		<div class="container-flex">
-			        <div id="import" class="tab-content active">
-			        	<div class="row">
-						    <div class="col-left">
-						        <input class="input" id="className" placeholder="Nom de l'entité" />
-						        <input class="input" id="apiName" placeholder="Nom de l'API ex : api-a-sale" />
-						    </div>
-						    <div class="col-right">
-						        <!-- Ajouter un champ pour télécharger un fichier PDF -->
-						        <div class="buttons">
+				</div>
+			</div>
+		</div>
+		<div id="java-section" class="content-section active">
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'entity')">Entité</div>
+				<div class="tab" onclick="openTab(event, 'table')">Table</div>
+				<div class="tab" onclick="openTab(event, 'mapper')">Mapper</div>
+				<div class="tab" onclick="openTab(event, 'controller')">Controller</div>
+				<div class="tab" onclick="openTab(event, 'service')">Service</div>
+				<div class="tab" onclick="openTab(event, 'serviceImpl')">ServiceImpl</div>
+				<div class="tab" onclick="openTab(event, 'repository')">Repository</div>
+				<div class="tab" onclick="openTab(event, 'swagger')">Swagger</div>
+			</div>
+
+			<div class="height">
+				<div class="container-flex">
+					<div id="import" class="tab-content active">
+						<div class="row">
+							<div class="col-left">
+								<input class="input" id="className" placeholder="Nom de l'entité" />
+								<input class="input" id="apiName" placeholder="Nom de l'API ex : api-a-sale" />
+							</div>
+							<div class="col-right">
+								<!-- Ajouter un champ pour télécharger un fichier PDF -->
+								<div class="buttons">
 									<!-- Zone de drag & drop -->
 									<div id="dropZone">
-									    <p>📂 Glissez-déposez votre fichier ici ou cliquez pour sélectionner</p>
-									    <input type="file" id="fileInput" accept=".pdf, .csv">
+										<p>📂 Glissez-déposez votre fichier ici ou cliquez pour sélectionner</p>
+										<input type="file" id="fileInput" accept=".pdf, .csv">
 									</div>
-									<p id="fileName"></p> <!-- Affiche le nom du fichier -->									
-						        </div>
-						    </div>
+									<p id="fileName"></p> <!-- Affiche le nom du fichier -->
+								</div>
+							</div>
 						</div>
-						        		        	
-			            <textarea id="csvInput" placeholder="Collez votre xml ici..."></textarea>
-			             <div class="buttons">
-						    <button id="generateJava" class="button" onclick="generateJava()">🚀 Générer les classes java</button>
-						    <p id="loadingImport"><span class="loader"></span> Génération en cours...</p>
-				    		<p id="statusImport"></p>
-				    	</div> 
-			        </div>
-			        <div id="entity" class="tab-content">
+
+						<textarea id="csvInput" placeholder="Collez votre xml ici..."></textarea>
+						<div class="buttons">
+							<button id="generateJava" class="button" onclick="generateJava()">🚀 Générer les classes
+								java</button>
+							<p id="loadingImport"><span class="loader"></span> Génération en cours...</p>
+							<p id="statusImport"></p>
+						</div>
+					</div>
+					<div id="entity" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedEntity', this)">Copier</button>
-			            <pre><code id="generatedEntity" class="code-block language-java">En attente de la génération de l'entité</code></pre>
-			        </div>
-			        <div id="table" class="tab-content">
+						<pre><code id="generatedEntity" class="code-block language-java">En attente de la génération de l'entité</code></pre>
+					</div>
+					<div id="table" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedTable', this)">Copier</button>
-			            <pre><code id="generatedTable" class="code-block language-java">En attente de la génération de l'entité table</code></pre>
-			        </div>
-			        <div id="mapper" class="tab-content">
+						<pre><code id="generatedTable" class="code-block language-java">En attente de la génération de l'entité table</code></pre>
+					</div>
+					<div id="mapper" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedMapper', this)">Copier</button>
-			            <pre><code id="generatedMapper" class="code-block language-java">En attente de la génération du mapper</code></pre>
-			        </div>
-			        <div id="controller" class="tab-content">
+						<pre><code id="generatedMapper" class="code-block language-java">En attente de la génération du mapper</code></pre>
+					</div>
+					<div id="controller" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedController', this)">Copier</button>
-			            <pre><code id="generatedController" class="code-block language-java">En attente de la génération du controller</code></pre>
-			        </div>
-			        <div id="service" class="tab-content">
+						<pre><code id="generatedController" class="code-block language-java">En attente de la génération du controller</code></pre>
+					</div>
+					<div id="service" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedService', this)">Copier</button>
-			            <pre><code id="generatedService" class="code-block language-java">En attente de la génération du service</code></pre>
-			        </div>
-			        <div id="serviceImpl" class="tab-content">
+						<pre><code id="generatedService" class="code-block language-java">En attente de la génération du service</code></pre>
+					</div>
+					<div id="serviceImpl" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedServiceImpl', this)">Copier</button>
-			            <pre><code id="generatedServiceImpl" class="code-block language-java">En attente de la génération de l'implémentation du service</code></pre>
-			        </div>
-			        <div id="repository" class="tab-content">
+						<pre><code id="generatedServiceImpl" class="code-block language-java">En attente de la génération de l'implémentation du service</code></pre>
+					</div>
+					<div id="repository" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedRepository', this)">Copier</button>
-			            <pre><code id="generatedRepository" class="code-block language-java">En attente de la génération du repository</code></pre>
-			        </div>  
-			        <div id="swagger" class="tab-content">
+						<pre><code id="generatedRepository" class="code-block language-java">En attente de la génération du repository</code></pre>
+					</div>
+					<div id="swagger" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedSwagger', this)">Copier</button>
-			            <pre><code id="generatedSwagger" class="code-block language-yaml">En attente de la génération du swagger</code></pre>
-			        </div>  
-			    </div>  
-			</div>  
-	   	</div> 
-	   	<div id="test-section" class="content-section">        
-    		<div class="tabs">
-	            <div class="tab active" onclick="openTab(event, 'test_import')">Import</div>
-	            <div class="tab" onclick="openTab(event, 'test_entity')">Entité</div>
-	            <div class="tab" onclick="openTab(event, 'test_dto')">Dto</div>
-	        </div>
-	        <div class="height">
-	    		<div class="container-flex">
-	    			 <div id="test_import" class="tab-content active">	        	
-			            <textarea id="javaInput" placeholder="Collez votre class ici..."></textarea>
-			             <div class="buttons">
-						    <button id="generateTest" class="button" onclick="generateTest()">🚀 Générer les tests</button>
-						    <p id="loadingTestImport"><span class="loader"></span> Génération en cours...</p>
-				    		<p id="statusTestImport"></p>
-				    	</div> 
-			        </div>
-			        <div id="test_entity" class="tab-content">
-			          	<pre><code id="generatedTestEntity" class="code-block language-java">En attente de la génération de l'entité...</code></pre>
+						<pre><code id="generatedSwagger" class="code-block language-yaml">En attente de la génération du swagger</code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="test-section" class="content-section">
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'test_import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'test_entity')">Entité</div>
+				<div class="tab" onclick="openTab(event, 'test_dto')">Dto</div>
+				<div class="tab" onclick="openTab(event, 'test_mapper')">Mapper</div>
+				<div class="tab" onclick="openTab(event, 'test_mapper_view')">Mapper vue</div>
+				<div class="tab" onclick="openTab(event, 'test_service')">Service</div>
+				<div class="tab" onclick="openTab(event, 'test_controller')">Controller</div>
+			</div>
+			<div class="height">
+				<div class="container-flex">
+					<div id="test_import" class="tab-content active">
+						<div class="param-buttons"
+							style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+							<label>
+								<input type="checkbox" id="deleteRecord" checked> deleteRecord
+							</label>
+							<label>
+								<input type="checkbox" id="idCompany" checked> idCompany
+							</label>
+							<label>
+								<input type="checkbox" id="idEstablishment" checked> idEstablishment
+							</label>
+						</div>
+
+						<!-- Textareas pour les classes -->
+						<div class="textareas">
+							<textarea id="javaInputMain" placeholder="Collez votre classe"></textarea>
+							<textarea id="javaInputSecondary" placeholder="Collez votre vue si vous en avez une"></textarea>
+						</div>
+
+						<!-- Boutons et status -->
+						<div class="buttons" style="margin-top: 10px;">
+							<button id="generateTest" class="button" onclick="generateTest()">🚀 Générer les
+								tests</button>
+							<p id="loadingTestImport" style="display: none;"><span class="loader"></span> Génération en
+								cours...</p>
+							<p id="statusTestImport"></p>
+						</div>
+					</div>
+					<div id="test_entity" class="tab-content">
+						<pre><code id="generatedTestEntity" class="code-block language-java">En attente de la génération de l'entité...</code></pre>
 						<button class="copy-btn" onclick="copyToClipboard('generatedTestEntity', this)">Copier</button>
 					</div>
 					<div id="test_dto" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedTestDto', this)">Copier</button>
-					  	<pre><code id="generatedTestDto" class="code-block language-java">En attente de la génération du DTO...</code></pre>
+						<pre><code id="generatedTestDto" class="code-block language-java">En attente de la génération du DTO...</code></pre>
 					</div>
-		        </div>      
-		    </div>
-        </div>  
+					<div id="test_mapper" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedTestMapper', this)">Copier</button>
+						<pre><code id="generatedTestMapper" class="code-block language-java">En attente de la génération du mapper...</code></pre>
+					</div>
+					<div id="test_mapper_view" class="tab-content">
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedTestMapperView', this)">Copier</button>
+						<pre><code id="generatedTestMapperView" class="code-block language-java">En attente de la génération du mapper view...</code></pre>
+					</div>
+					<div id="test_service" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedTestService', this)">Copier</button>
+						<pre><code id="generatedTestService" class="code-block language-java">En attente de la génération du service...</code></pre>
+					</div>
+					<div id="test_controller" class="tab-content">
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedTestController', this)">Copier</button>
+						<pre><code id="generatedTestController" class="code-block language-java">En attente de la génération du controller...</code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div id="excel-section" class="content-section">
 			<div class="tabs">
 				<div class="tab active" onclick="openTab(event, 'excel_import')">Import</div>
 				<div class="tab" onclick="openTab(event, 'excel_result')">Résultat</div>
-			</div>  
+			</div>
 			<div class="height">
 				<div class="container-flex">
 					<div id="excel_import" class="tab-content active">
 						<div class="api-import">
-							<textarea id="excelJavaClassInput" placeholder="Collez ici votre class..."></textarea>						
+							<textarea id="excelJavaClassInput" placeholder="Collez ici votre class..."></textarea>
 							<textarea id="excelJavaTableInput" placeholder="Collez ici votre class table..."></textarea>
-					 	</div>        	
-			             <div class="buttons">
-						    <button id="generateTest" class="button" onclick="generateExcel()">🚀 Générer les tests</button>
-						    <p id="loadingExcel"><span class="loader"></span> Génération en cours...</p>
-				    		<p id="statusExcel"></p>
-				    	</div>
-			        </div>
-			        <div id="excel_result" class="tab-content">
-			          	<textarea id="generatedExcel">En attente de la génération de l'excel...</textarea>
+						</div>
+						<div class="buttons">
+							<button id="generateTest" class="button" onclick="generateExcel()">🚀 Générer les
+								tests</button>
+							<p id="loadingExcel"><span class="loader"></span> Génération en cours...</p>
+							<p id="statusExcel"></p>
+						</div>
+					</div>
+					<div id="excel_result" class="tab-content">
+						<textarea id="generatedExcel">En attente de la génération de l'excel...</textarea>
 						<button class="copy-btn" onclick="copyToClipboard('generatedExcel', this)">Copier</button>
 					</div>
-			    </div>      
-			</div>  
-		</div>    
-    </div>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
+
 </html>

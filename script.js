@@ -325,22 +325,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 function generateTest() {
-	let javaContent = document.getElementById("javaInput").value;
-	if (!javaContent.trim()) {
-		alert("Veuillez coller votre classe");
-		return;
-	}
 
 	// Afficher le loader avant l'appel à fetch
 	document.getElementById("loadingTestImport").style.display = "block";
 	document.getElementById("statusImport").textContent = ""; // Effacer tout message précédent
+	
+	const javaInputMain = document.getElementById("javaInputMain").value.trim();
+    const javaInputSecondary = document.getElementById("javaInputSecondary").value.trim();
+
+    // Tes checkboxes
+    const deleteRecord = document.getElementById("deleteRecord").checked;
+    const idCompany = document.getElementById("idCompany").checked;
+    const idEstablishment = document.getElementById("idEstablishment").checked;
+
+	if (!javaInputMain.trim()) {
+		alert("Veuillez coller votre classe");
+		return;
+	}
+    // Construire le corps JSON (2 classes)
+    const body = {
+        mainClassContent: javaInputMain,
+        secondaryClassContent: javaInputSecondary || null
+    };
 
 	fetch("http://localhost:8091/api/test/generate", {
-	            method: "POST",
-	            headers: { 
-	            	"Content-Type": "text/plain"
-	            	},
-	            body: javaContent
+	        method: "POST",
+	        headers: {
+	            "Content-Type": "application/json",
+	            "deleteRecord": deleteRecord,
+	            "idCompany": idCompany,
+	            "idEstablishment": idEstablishment
+	        },
+	        body: JSON.stringify(body)
 	        })
 	        .then(response => {
 	            if (response.ok) {
@@ -355,6 +371,10 @@ function generateTest() {
 	            console.log(data);
 	            document.getElementById("generatedTestEntity").textContent = data.entity; 
 	            document.getElementById("generatedTestDto").textContent = data.dto; 
+	            document.getElementById("generatedTestMapper").textContent = data.mapper; 
+	            document.getElementById("generatedTestMapperView").textContent = data.mapperView; 
+	            document.getElementById("generatedTestService").textContent = data.service; 
+	            document.getElementById("generatedTestController").textContent = data.controller; 
 	            Prism.highlightAll();
 	            
 	            // Afficher le message de succès

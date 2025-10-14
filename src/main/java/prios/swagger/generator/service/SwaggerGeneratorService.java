@@ -1,14 +1,22 @@
 package prios.swagger.generator.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.ArrayInitializerExpr;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
@@ -90,6 +98,15 @@ public class SwaggerGeneratorService {
 	           "      tags:\n" +
 	           "        - " + className + "\n" +
 	           "      parameters:\n" +
+	           "        - name: criteriaParam\n" +
+	           "          in: query\n" +
+	           "          description: \"Paramètres dynamiques sous forme de clé=valeur\"\n" +
+	           "          required: false\n" +
+	           "          style: form\n" +
+	           "          explode: true\n" +
+	           "          schema:\n" +
+	           "            type: object\n" +
+	           "            	additionalProperties: true\n" +
 	           "        - name: idCompany\n" +
 	           "          in: header\n" +
 	           "          required: true\n" +
@@ -106,6 +123,12 @@ public class SwaggerGeneratorService {
 	           "          schema:\n" +
 	           "            type: string\n" +
 	           "            enum: [all, true, false]\n" +
+	           "        - name: detail\n" +
+	           "          in: query\n" +
+	           "          description: Paramètre optionnel pour spécifier les détails\n" +
+	           "          required: false\n" +
+	           "          schema:\n" +
+	           "            type: string\n" +
 	           "      responses:\n" +
 	           "        \"200\":\n" +
 	           "          description: Liste des " + className + "s récupérée avec succès\n" +
@@ -115,7 +138,7 @@ public class SwaggerGeneratorService {
 	           "                type: array\n" +
 	           "                items:\n" +
 	           "                  $ref: \"#/components/schemas/" + className + "\"\n\n" +
-	           "  /v1/" + toCamelCase(className) + "s/{id}:\n" +
+	           "  /v1/" + endPointName(className) + "s/{id}:\n" +
 	           "    get:\n" +
 	           "      summary: Récupère un " + className + " par son id\n" +
 	           "      description: Récupère un " + className + " par son id\n" +
@@ -215,6 +238,12 @@ public class SwaggerGeneratorService {
         // Vérifier les annotations sur le champ
         int maxLength = 255;  // Valeur par défaut pour le maxLength
         String description = null;  // Initialiser la description à null
+        BigDecimal maxInteger = BigDecimal.ZERO;
+        BigDecimal maxFraction = BigDecimal.ZERO;
+        String maximum = "99";
+        String minimum = "-99";
+        String fraction = "";
+        String multipleOf = "0.0";
         
         for (AnnotationExpr annotation : field.getAnnotations()) {
             if (annotation instanceof NormalAnnotationExpr) {
@@ -228,6 +257,27 @@ public class SwaggerGeneratorService {
                         }
                     }
                 }
+                
+                // Vérifier l'annotation @Digits pour le maximum et minimum
+                if ("Digits".equals(normalAnnotation.getNameAsString())) {
+                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
+                        if ("integer".equals(pair.getNameAsString())) {
+                        	int integerDigits = Integer.parseInt(pair.getValue().toString());
+                        	maxInteger = BigDecimal.TEN.pow(integerDigits).subtract(BigDecimal.ONE);
+                        }
+                        if ("fraction".equals(pair.getNameAsString())) {
+                        	int fractionDigits = Integer.parseInt(pair.getValue().toString());
+                        	if (fractionDigits > 0) {
+                            	maxFraction = BigDecimal.TEN.pow(fractionDigits).subtract(BigDecimal.ONE);
+                            	fraction = ".".concat(String.valueOf(maxFraction));
+                            	multipleOf = BigDecimal.ONE.divide(BigDecimal.TEN.pow(fractionDigits), fractionDigits, RoundingMode.UNNECESSARY).toPlainString();
+                        	}
+                        }
+                    }
+                    maximum = maxInteger.toPlainString().concat(fraction);
+                    minimum = "-".concat(maximum);
+                }
+
 
                 // Vérifier l'annotation @ApiObjectField pour la description
                 if ("ApiObjectField".equals(normalAnnotation.getNameAsString())) {
@@ -249,16 +299,16 @@ public class SwaggerGeneratorService {
         
         switch (fieldType) {
             case "Long":
-                swaggerProperty += "          type: integer\n          format: int64\n          description: " + description + "\n          example: 12345\n";
+                swaggerProperty += "          type: integer\n          format: int64\n          description: " + description + "\n          example: 12345\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n";
                 break;
             case "Integer":
-                swaggerProperty += "          type: integer\n          format: int32\n          description: \"" + description + "\"\n          example: 100\n";
+                swaggerProperty += "          type: integer\n          format: int32\n          description: " + description + "\n          example: 100\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n";
                 break;  
             case "Double":
-                swaggerProperty += "          type: number\n          format: double\n          description: " + description + "\n          example: 99.99\n";
+                swaggerProperty += "          type: number\n          format: double\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
                 break;
             case "Float":
-                swaggerProperty += "          type: number\n          format: float\n          description: " + description + "\n          example: 99.99\n";
+                swaggerProperty += "          type: number\n          format: float\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
                 break; 
             case "Date":
                 swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
@@ -387,6 +437,54 @@ public class SwaggerGeneratorService {
             return javaClassContent;
         }
     }
+    
+    public String  replaceAttributeOverrides(String javaClassContent) {
+    	CompilationUnit cu = StaticJavaParser.parse(javaClassContent);
+        cu.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+            List<AnnotationExpr> toAdd = new ArrayList<>();
+            List<AnnotationExpr> toRemove = new ArrayList<>();
+
+            for (AnnotationExpr annotation : clazz.getAnnotations()) {
+                if (annotation.getNameAsString().equals("AttributeOverrides")) {
+                    // Cas NormalAnnotationExpr (avec @AttributeOverride multiple)
+                    if (annotation instanceof NormalAnnotationExpr normal) {
+                        normal.getPairs().forEach(pair -> {
+                            Expression value = pair.getValue();
+                            if (value instanceof ArrayInitializerExpr array) {
+                                array.getValues().forEach(expr -> {
+                                    if (expr.isAnnotationExpr()) {
+                                        toAdd.add(expr.asAnnotationExpr());
+                                    }
+                                });
+                            } else if (value.isAnnotationExpr()) {
+                                toAdd.add(value.asAnnotationExpr());
+                            }
+                        });
+                    }
+                    // Cas SingleMemberAnnotationExpr (rare)
+                    else if (annotation instanceof SingleMemberAnnotationExpr single) {
+                        Expression value = single.getMemberValue();
+                        if (value instanceof ArrayInitializerExpr array) {
+                            array.getValues().forEach(expr -> {
+                                if (expr.isAnnotationExpr()) {
+                                    toAdd.add(expr.asAnnotationExpr());
+                                }
+                            });
+                        } else if (value.isAnnotationExpr()) {
+                            toAdd.add(value.asAnnotationExpr());
+                        }
+                    }
+
+                    toRemove.add(annotation);
+                }
+            }
+
+            toRemove.forEach(clazz::remove);
+            toAdd.forEach(clazz::addAnnotation);
+        });
+        return cu.toString();
+    }
+
  
     private String toCamelCase(String className) {
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
