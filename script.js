@@ -323,6 +323,73 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+function generateJavaClass() {
+
+	// Afficher le loader avant l'appel à fetch
+	document.getElementById("loadingJavaClassImport").style.display = "block";
+	document.getElementById("statusJavaClassImport").textContent = ""; // Effacer tout message précédent
+	
+	const javaClassInputMain = document.getElementById("javaClassInputMain").value.trim();
+    const javaClassInputSecondary = document.getElementById("javaClassInputSecondary").value.trim();
+
+    // Tes checkboxes
+    const deleteRecord = document.getElementById("deleteRecord").checked;
+    const idCompany = document.getElementById("idCompany").checked;
+
+	if (!javaClassInputMain.trim()) {
+		alert("Veuillez coller votre classe");
+		return;
+	}
+
+	console.log("javaClassInputMain");
+	console.log(javaClassInputMain);
+    // Construire le corps JSON (2 classes)
+    const body = {
+        mainClassContent: javaClassInputMain,
+        secondaryClassContent: javaClassInputSecondary || null
+    };
+
+	fetch("http://localhost:8091/api/javaClass/generate", {
+	        method: "POST",
+	        headers: {
+	            "Content-Type": "application/json",
+	            "deleteRecord": deleteRecord,
+	            "idCompany": idCompany
+	        },
+	        body: JSON.stringify(body)
+	        })
+	        .then(response => {
+	            if (response.ok) {
+	                return response.json(); // Lire la réponse
+	            }
+	            return response.json().then(err => { // Lire l'erreur envoyée par le serveur
+	                throw new Error(err.error || 'Erreur lors de la génération');
+	            });
+	        })
+	        .then(data => {
+	            // Afficher l'entité dans le textarea
+	            console.log(data);
+	            document.getElementById("generatedJavaClassMapper").textContent = data.mapper; 
+	            document.getElementById("generatedJavaClassMapperView").textContent = data.mapperView; 
+	            document.getElementById("generatedJavaClassService").textContent = data.service; 
+	            document.getElementById("generatedJavaClassServiceImpl").textContent = data.serviceImpl; 
+	            document.getElementById("generatedJavaClassController").textContent = data.controller; 
+	            document.getElementById("generatedJavaClassSwagger").textContent = data.swagger; 
+	            Prism.highlightAll();
+	            
+	            // Afficher le message de succès
+	            document.getElementById("statusJavaClassImport").textContent = "✅ classes généré avec succès";
+	            document.getElementById("statusJavaClassImport").style.color = "green";
+		
+	            // Masquer le loader
+	            document.getElementById("loadingJavaClassImport").style.display = "none";
+	        })
+	        .catch(error => {
+	            document.getElementById("statusJavaClassImport").textContent = "❌ Erreur : " + error.message;
+	            document.getElementById("statusJavaClassImport").style.color = "red";
+	            document.getElementById("loadingJavaClassImport").style.display = "none"; // Masquer le loader en cas d'erreur
+	        });
+}
 
 function generateTest() {
 
@@ -336,8 +403,10 @@ function generateTest() {
     // Tes checkboxes
     const deleteRecord = document.getElementById("deleteRecord").checked;
     const idCompany = document.getElementById("idCompany").checked;
-    const idEstablishment = document.getElementById("idEstablishment").checked;
 
+
+	console.log("javaInputMain");
+	console.log(javaInputMain);
 	if (!javaInputMain.trim()) {
 		alert("Veuillez coller votre classe");
 		return;
@@ -353,8 +422,7 @@ function generateTest() {
 	        headers: {
 	            "Content-Type": "application/json",
 	            "deleteRecord": deleteRecord,
-	            "idCompany": idCompany,
-	            "idEstablishment": idEstablishment
+	            "idCompany": idCompany
 	        },
 	        body: JSON.stringify(body)
 	        })

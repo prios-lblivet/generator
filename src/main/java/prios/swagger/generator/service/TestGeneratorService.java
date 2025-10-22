@@ -1,7 +1,10 @@
 package prios.swagger.generator.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
@@ -18,7 +21,7 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 @Service
 public class TestGeneratorService {
 	
-	public Map<String, String> generate(String javaClassContent, String javaViewClassContent, boolean deleteRecord, boolean idCompany, boolean idEstablishment) {
+	public Map<String, String> generate(String javaClassContent, String javaViewClassContent, boolean deleteRecord, boolean idCompany) {
         Map<String, String> response = new HashMap<>();
 		boolean hasView = javaViewClassContent != null && !javaViewClassContent.isEmpty();
         StringBuilder entity = new StringBuilder();
@@ -208,18 +211,23 @@ public class TestGeneratorService {
         
         switch (fieldType) {
             case "Long":
-            	Long randomLong = ThreadLocalRandom.current().nextLong(1, maxDigits);
+            	Long randomLong = ThreadLocalRandom.current().nextLong(0, maxDigits);
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
                 break;
             case "Integer":
             	Integer randomInt = 8;
             	if (!fieldName.equals("id")) {
-            		randomInt = ThreadLocalRandom.current().nextInt(1, maxDigits);
+            		randomInt = ThreadLocalRandom.current().nextInt(0, maxDigits);
             	}
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
                 break;  
+            case "BigDecimal":
+            	BigDecimal randomBigDecimal = randomBigDecimal(maxDigits, maxFractionDigits);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(new BigDecimal(\"" + randomBigDecimal + "\"));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomBigDecimal + ");\n";
+                break;
             case "Double":
             	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, maxDigits);
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
@@ -233,6 +241,16 @@ public class TestGeneratorService {
             case "Date":
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(date);\n";
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(localDateTime);\n";
+                break;
+            case "LocalDateTime":
+            	int year = 2025;
+            	if (fieldName.toLowerCase().contains("end")) {
+            		year = 2026;
+            	}
+            	int month = ThreadLocalRandom.current().nextInt(1, 13);
+            	int day = ThreadLocalRandom.current().nextInt(1, 28);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalDateTime.of(" + year + ", " + month + ", " + day + ", 0, 0, 0, 0));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalDateTime.of(" + year + ", " + month + ", " + day + ", 0, 0, 0, 0));\n";
                 break;
             case "boolean":
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(true);\n";
@@ -856,4 +874,29 @@ public class TestGeneratorService {
 
 		return controllerTest.toString();
 	}
+	
+	private static final Random random = new Random();
+	
+	public static BigDecimal randomBigDecimal(int maxDigits, int maxFractionDigits) {
+        if (maxDigits <= 0) {
+            throw new IllegalArgumentException("maxDigits must be > 0");
+        }
+        if (maxFractionDigits < 0) {
+            throw new IllegalArgumentException("maxFractionDigits must be >= 0");
+        }
+
+        // Génère la partie entière
+        BigDecimal integerPart = BigDecimal.valueOf(random.nextLong(maxDigits == 18 ? Long.MAX_VALUE : (long) Math.pow(10, maxDigits)))
+                                           .abs();
+
+        // Génère la partie fractionnaire
+        BigDecimal fractionPart = BigDecimal.ZERO;
+        if (maxFractionDigits > 0) {
+            long fractionValue = (long) (random.nextDouble() * Math.pow(10, maxFractionDigits));
+            fractionPart = BigDecimal.valueOf(fractionValue)
+                                     .divide(BigDecimal.TEN.pow(maxFractionDigits), maxFractionDigits, RoundingMode.DOWN);
+        }
+
+        return integerPart.add(fractionPart);
+    }
 }

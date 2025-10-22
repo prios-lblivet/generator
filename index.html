@@ -397,7 +397,11 @@
 			width: 50%;
 			box-sizing: border-box;
 		}
-
+		
+		input[type="checkbox"] {
+		  accent-color: #228B22; /* bleu vif, tu peux changer la couleur */
+		  cursor: pointer;
+		}
 
 	</style>
 </head>
@@ -407,17 +411,17 @@
 	<nav>
 		<div class="logo">
 			<img src="https://www.prios.fr/wp-content/uploads/2020/07/pr_logo_priosblue-04-150x23.png" alt="Logo">
-		</div>
-		<ul class="menu">
-			<li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')" class="active">Générateur
-					java</a></li>
-			<li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de
-					swagger</a></li>
-			<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
-			<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
-		</ul>
-	</nav>
-	<div class="container">
+			</div>
+			<ul class="menu">
+				<li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')">Générateur nouvelle entité</a></li>
+				<li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de
+						swagger</a></li>
+				<li><a href="javascript:void(0);" onclick="switchSection(event, 'javaClass-section')" class="active">Générateur java</a></li>
+				<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
+				<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
+			</ul>
+			</nav>
+			<div class="container">
 
 		<div id="swagger-section" class="content-section">
 			<div class="tabs">
@@ -447,7 +451,7 @@
 				</div>
 			</div>
 		</div>
-		<div id="java-section" class="content-section active">
+		<div id="java-section" class="content-section">
 			<div class="tabs">
 				<div class="tab active" onclick="openTab(event, 'import')">Import</div>
 				<div class="tab" onclick="openTab(event, 'entity')">Entité</div>
@@ -524,6 +528,70 @@
 				</div>
 			</div>
 		</div>
+		<div id="javaClass-section" class="content-section active">
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'javaClass_import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_mapper')">Mapper</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_mapper_view')">Mapper vue</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_service')">Service</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_serviceImpl')">ServiceImpl</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_controller')">Controller</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_swagger')">Swagger</div>
+			</div>
+			<div class="height">
+				<div class="container-flex">
+					<div id="javaClass_import" class="tab-content active">
+						<div class="param-buttons" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+							<label>
+								<input type="checkbox" id="deleteRecord" checked> deleteRecord
+							</label>
+							<label>
+								<input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
+							</label>
+						</div>
+		
+						<!-- Textareas pour les classes -->
+						<div class="textareas">
+							<textarea id="javaClassInputMain" placeholder="Collez votre classe"></textarea>
+							<textarea id="javaClassInputSecondary" placeholder="Collez votre vue si vous en avez une"></textarea>
+						</div>
+		
+						<!-- Boutons et status -->
+						<div class="buttons" style="margin-top: 10px;">
+							<button id="generateJavaClass" class="button" onclick="generateJavaClass()">🚀 Générer les
+								class</button>
+							<p id="loadingJavaClassImport" style="display: none;"><span class="loader"></span> Génération en
+								cours...</p>
+							<p id="statusJavaClassImport"></p>
+						</div>
+					</div>
+					<div id="javaClass_mapper" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapper', this)">Copier</button>
+						<pre><code id="generatedJavaClassMapper" class="code-block language-java">En attente de la génération du mapper...</code></pre>
+					</div>
+					<div id="javaClass_mapper_view" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperView', this)">Copier</button>
+						<pre><code id="generatedJavaClassMapperView" class="code-block language-java">En attente de la génération du mapper view...</code></pre>
+					</div>
+					<div id="javaClass_service" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassService', this)">Copier</button>
+						<pre><code id="generatedJavaClassService" class="code-block language-java">En attente de la génération du service...</code></pre>
+					</div>
+					<div id="javaClass_serviceImpl" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImpl', this)">Copier</button>
+						<pre><code id="generatedJavaClassServiceImpl" class="code-block language-java">En attente de la génération du serviceImpl...</code></pre>
+					</div>
+					<div id="javaClass_controller" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassController', this)">Copier</button>
+						<pre><code id="generatedJavaClassController" class="code-block language-java">En attente de la génération du controller...</code></pre>
+					</div>
+					<div id="javaClass_swagger" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassSwagger', this)">Copier</button>
+						<pre><code id="generatedJavaClassSwagger" class="code-block language-yaml">En attente de la génération du swagger...</code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div id="test-section" class="content-section">
 			<div class="tabs">
 				<div class="tab active" onclick="openTab(event, 'test_import')">Import</div>
@@ -543,10 +611,7 @@
 								<input type="checkbox" id="deleteRecord" checked> deleteRecord
 							</label>
 							<label>
-								<input type="checkbox" id="idCompany" checked> idCompany
-							</label>
-							<label>
-								<input type="checkbox" id="idEstablishment" checked> idEstablishment
+								<input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
 							</label>
 						</div>
 

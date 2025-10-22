@@ -305,12 +305,18 @@ public class SwaggerGeneratorService {
                 swaggerProperty += "          type: integer\n          format: int32\n          description: " + description + "\n          example: 100\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n";
                 break;  
             case "Double":
-                swaggerProperty += "          type: number\n          format: double\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
+                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
                 break;
             case "Float":
-                swaggerProperty += "          type: number\n          format: float\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
+                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
+                break; 
+            case "BigDecimal":
+                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
                 break; 
             case "Date":
+                swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
+                break;
+            case "LocalDateTime":
                 swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
                 break;
             case "boolean":
@@ -402,6 +408,7 @@ public class SwaggerGeneratorService {
             CompilationUnit compilationUnit = javaParser.parse(javaClassContent)
                 .getResult().orElseThrow(() -> new ParseException("Invalid Java code"));
 
+            // 1) Remplacer @ApiObjectField par Javadoc
             compilationUnit.accept(new ModifierVisitor<Void>() {
                 @Override
                 public Visitable visit(FieldDeclaration field, Void arg) {
@@ -424,6 +431,31 @@ public class SwaggerGeneratorService {
                         if (!description.isBlank()) {
                             field.setJavadocComment(new JavadocComment(description));
                         }
+                    });
+
+                    return super.visit(field, arg);
+                }
+            }, null);
+            
+            // 2) Remplacer les types Date → LocalDateTime et Double/Float → BigDecimal
+            compilationUnit.accept(new ModifierVisitor<Void>() {
+                @Override
+                public Visitable visit(FieldDeclaration field, Void arg) {
+                    field.getVariables().forEach(variable -> {
+                        field.getElementType().ifClassOrInterfaceType(type -> {
+                            String typeName = type.getNameAsString();
+
+                            switch (typeName) {
+                                case "Date":
+                                    type.setName("LocalDateTime");
+                                    break;
+
+                                case "Double":
+                                case "Float":
+                                    type.setName("BigDecimal");
+                                    break;
+                            }
+                        });
                     });
 
                     return super.visit(field, arg);

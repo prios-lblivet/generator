@@ -10,31 +10,31 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import prios.swagger.generator.response.ApiTestResponse;
-import prios.swagger.generator.service.TestGeneratorService;
+import prios.swagger.generator.response.ApiJavaClassResponse;
+import prios.swagger.generator.service.JavaClassGeneratorService;
 import prios.swagger.generator.utils.GenerateRequest;
 
 @RestController
-@RequestMapping("/api/test")
+@RequestMapping("/api/javaClass")
 @CrossOrigin(origins = "*")
-class TestController {
+class JavaClassController {
 
-	private final TestGeneratorService testGeneratorService;
+	private final JavaClassGeneratorService javaClassGeneratorService;
 
-	public TestController(TestGeneratorService testGeneratorService) {
-		this.testGeneratorService = testGeneratorService;
+	public JavaClassController(JavaClassGeneratorService javaClassGeneratorService) {
+		this.javaClassGeneratorService = javaClassGeneratorService;
 	}
 
 	@PostMapping(value = "/generate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ApiTestResponse generateSwagger(@RequestBody GenerateRequest request,
+	public ApiJavaClassResponse generateJavaClass(@RequestBody GenerateRequest request,
 			@RequestHeader(required = false, defaultValue = "false") boolean deleteRecord,
 			@RequestHeader(required = false) boolean idCompany) {
-		
-		Map<String, String> response = testGeneratorService.generate(request.getMainClassContent(),
+
+		Map<String, String> response = javaClassGeneratorService.generate(request.getMainClassContent(),
 				request.getSecondaryClassContent(), deleteRecord, idCompany);
 
-		return new ApiTestResponse(response.get("entity"), response.get("dto"), response.get("mapper"),
-				response.get("mapperView"), response.get("service"), response.get("controller"));
+		return new ApiJavaClassResponse(response.get("mapper"), response.get("mapperView"), response.get("service"),
+				response.get("serviceImpl"), response.get("controller"), response.get("swagger"));
 	}
 
 }
