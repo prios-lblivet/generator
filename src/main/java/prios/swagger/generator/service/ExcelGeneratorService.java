@@ -46,6 +46,7 @@ public class ExcelGeneratorService {
 				ApiExcelResponse dto = new ApiExcelResponse();
 
 				dto.setNiveau(1); // par défaut
+				dto.setTaille("");
 				dto.setNom(fieldName);
 				dto.setType(field.getElementType().asString());
 				dto.setNullable("nullable");
@@ -157,7 +158,7 @@ public class ExcelGeneratorService {
 			}
 		}
 		
-        return null;
+        return fieldName;
     }
 	
 	private void addHistoryManagement(String javaTableContent, List<ApiExcelResponse> apiExcelResponses) {
