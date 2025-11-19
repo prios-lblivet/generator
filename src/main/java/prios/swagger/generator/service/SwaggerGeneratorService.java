@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -11,13 +12,16 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.visitor.ModifierVisitor;
@@ -230,112 +234,133 @@ public class SwaggerGeneratorService {
         return properties.toString();
     }  
 
+
 	private String generateSwaggerProperty(FieldDeclaration field) {
-    	String fieldName = field.getVariables().get(0).getNameAsString();
-        String fieldType = field.getElementType().asString();
-        String swaggerProperty = "        " + fieldName + ":\n";
-        
-        // Vérifier les annotations sur le champ
-        int maxLength = 255;  // Valeur par défaut pour le maxLength
-        String description = null;  // Initialiser la description à null
-        BigDecimal maxInteger = BigDecimal.ZERO;
-        BigDecimal maxFraction = BigDecimal.ZERO;
-        String maximum = "99";
-        String minimum = "-99";
-        String fraction = "";
-        String multipleOf = "0.0";
-        
-        for (AnnotationExpr annotation : field.getAnnotations()) {
-            if (annotation instanceof NormalAnnotationExpr) {
-                NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
-                
-                // Vérifier l'annotation @Size pour maxLength
-                if ("Size".equals(normalAnnotation.getNameAsString())) {
-                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
-                        if ("max".equals(pair.getNameAsString())) {
-                            maxLength = Integer.parseInt(pair.getValue().toString());
-                        }
-                    }
-                }
-                
-                // Vérifier l'annotation @Digits pour le maximum et minimum
-                if ("Digits".equals(normalAnnotation.getNameAsString())) {
-                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
-                        if ("integer".equals(pair.getNameAsString())) {
-                        	int integerDigits = Integer.parseInt(pair.getValue().toString());
-                        	maxInteger = BigDecimal.TEN.pow(integerDigits).subtract(BigDecimal.ONE);
-                        }
-                        if ("fraction".equals(pair.getNameAsString())) {
-                        	int fractionDigits = Integer.parseInt(pair.getValue().toString());
-                        	if (fractionDigits > 0) {
-                            	maxFraction = BigDecimal.TEN.pow(fractionDigits).subtract(BigDecimal.ONE);
-                            	fraction = ".".concat(String.valueOf(maxFraction));
-                            	multipleOf = BigDecimal.ONE.divide(BigDecimal.TEN.pow(fractionDigits), fractionDigits, RoundingMode.UNNECESSARY).toPlainString();
-                        	}
-                        }
-                    }
-                    maximum = maxInteger.toPlainString().concat(fraction);
-                    minimum = "-".concat(maximum);
-                }
+		String fieldName = field.getVariables().get(0).getNameAsString();
+		String fieldType = field.getElementType().asString();
+		String swaggerProperty = "        " + fieldName + ":\n";
 
+		// Vérifier les annotations sur le champ
+		int maxLength = 255; // Valeur par défaut pour le maxLength
+		String description = null; // Initialiser la description à null
+		BigDecimal maxInteger = BigDecimal.ZERO;
+		BigDecimal maxFraction = BigDecimal.ZERO;
+		String maximum = "99";
+		String minimum = "-99";
+		String fraction = "";
+		String multipleOf = "0.0";
 
-                // Vérifier l'annotation @ApiObjectField pour la description
-                if ("ApiObjectField".equals(normalAnnotation.getNameAsString())) {
-                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
-                        if ("description".equals(pair.getNameAsString())) {
-                            description = pair.getValue().toString().replace("\"", "").replace(":", "");  // Retirer les guillemets
-                        }
-                    }
-                }
-                
-                if (description == null) {
-                	if (field.hasJavaDocComment()) {
-                	    Javadoc javadoc = field.getJavadoc().get();
-                	    description = javadoc.getDescription().toText().trim();
-                	}
-                }
-            }
-        }
-        
-        switch (fieldType) {
-            case "Long":
-                swaggerProperty += "          type: integer\n          format: int64\n          description: " + description + "\n          example: 12345\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n";
-                break;
-            case "Integer":
-                swaggerProperty += "          type: integer\n          format: int32\n          description: " + description + "\n          example: 100\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n";
-                break;  
-            case "Double":
-                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
-                break;
-            case "Float":
-                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
-                break; 
-            case "BigDecimal":
-                swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description + "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum + "\n          multipleOf: " + multipleOf + "\n";
-                break; 
-            case "Date":
-                swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
-                break;
-            case "LocalDateTime":
-                swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: " + description + "\n          format: date-time\n";
-                break;
-            case "boolean":
-                swaggerProperty += "          type: boolean\n          description: " + description + "\n          example: true\n";
-                break;
-            case "String":
-                swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: " + description + "\n          example: \"" + generateStringExample(fieldName, maxLength) + "\"\n";
-                break;
-            default:
-                // Gestion des types complexes (par exemple, en ajoutant le type directement sans $ref pour les types spéciaux)
-                if (isSpecialComplexType(fieldType)) {
-                    swaggerProperty += "          type: " + toCamelCase(fieldType) + "Type\n";
-                } else {
-                    swaggerProperty += "          $ref: '#/components/schemas/" + fieldType + "'\n";
-                }
-                break;
-        }
-        return swaggerProperty;
-    }
+		for (AnnotationExpr annotation : field.getAnnotations()) {
+			if (annotation instanceof NormalAnnotationExpr) {
+				NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
+
+				// Vérifier l'annotation @Size pour maxLength
+				if ("Size".equals(normalAnnotation.getNameAsString())) {
+					for (MemberValuePair pair : normalAnnotation.getPairs()) {
+						if ("max".equals(pair.getNameAsString())) {
+							maxLength = Integer.parseInt(pair.getValue().toString());
+						}
+					}
+				}
+
+				// Vérifier l'annotation @Digits pour le maximum et minimum
+				if ("Digits".equals(normalAnnotation.getNameAsString())) {
+					for (MemberValuePair pair : normalAnnotation.getPairs()) {
+						if ("integer".equals(pair.getNameAsString())) {
+							int integerDigits = Integer.parseInt(pair.getValue().toString());
+							maxInteger = BigDecimal.TEN.pow(integerDigits).subtract(BigDecimal.ONE);
+						}
+						if ("fraction".equals(pair.getNameAsString())) {
+							int fractionDigits = Integer.parseInt(pair.getValue().toString());
+							if (fractionDigits > 0) {
+								maxFraction = BigDecimal.TEN.pow(fractionDigits).subtract(BigDecimal.ONE);
+								fraction = ".".concat(String.valueOf(maxFraction));
+								multipleOf = BigDecimal.ONE.divide(BigDecimal.TEN.pow(fractionDigits), fractionDigits,
+										RoundingMode.UNNECESSARY).toPlainString();
+							}
+						}
+					}
+					maximum = maxInteger.toPlainString().concat(fraction);
+					minimum = "-".concat(maximum);
+				}
+
+				// Vérifier l'annotation @ApiObjectField pour la description
+				if ("ApiObjectField".equals(normalAnnotation.getNameAsString())) {
+					for (MemberValuePair pair : normalAnnotation.getPairs()) {
+						if ("description".equals(pair.getNameAsString())) {
+							description = pair.getValue().toString().replace("\"", "").replace(":", ""); // Retirer les
+																											// guillemets
+						}
+					}
+				}
+
+				if (description == null) {
+					if (field.hasJavaDocComment()) {
+						Javadoc javadoc = field.getJavadoc().get();
+						description = javadoc.getDescription().toText().trim();
+					}
+				}
+			}
+		}
+
+		switch (fieldType) {
+		case "Long":
+			swaggerProperty += "          type: integer\n          format: int64\n          description: " + description
+					+ "\n          example: 12345\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n";
+			break;
+		case "Integer":
+			swaggerProperty += "          type: integer\n          format: int32\n          description: " + description
+					+ "\n          example: 100\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n";
+			break;
+		case "Double":
+			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n          multipleOf: " + multipleOf + "\n";
+			break;
+		case "Float":
+			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n          multipleOf: " + multipleOf + "\n";
+			break;
+		case "BigDecimal":
+			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n          multipleOf: " + multipleOf + "\n";
+			break;
+		case "Date":
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+					+ description + "\n          format: date-time\n";
+			break;
+		case "LocalDateTime":
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+					+ description + "\n          format: date-time\n";
+			break;
+		case "boolean":
+			swaggerProperty += "          type: boolean\n          description: " + description
+					+ "\n          example: true\n";
+			break;
+		case "Boolean":
+			swaggerProperty += "          type: boolean\n          description: " + description
+					+ "\n          example: true\n";
+			break;
+		case "String":
+			swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: "
+					+ description + "\n          example: \"" + generateStringExample(fieldName, maxLength) + "\"\n";
+			break;
+		default:
+			// Gestion des types complexes (par exemple, en ajoutant le type directement
+			// sans $ref pour les types spéciaux)
+			if (isSpecialComplexType(fieldType)) {
+				swaggerProperty += "          type: " + toCamelCase(fieldType) + "Type\n";
+			} else {
+				swaggerProperty += "          $ref: '#/components/schemas/" + fieldType + "'\n";
+			}
+			break;
+		}
+		return swaggerProperty;
+	}
 
 
     private boolean isSpecialComplexType(String type) {
@@ -432,12 +457,42 @@ public class SwaggerGeneratorService {
                             field.setJavadocComment(new JavadocComment(description));
                         }
                     });
+                    
+                    // 2) Remplacer les DoubleConverter par BigDecimalConverter et DateConverter par LocalDateTimeDecimalConverter
+                    field.getAnnotationByName("Convert").ifPresent(annotation -> {
+                        String converter = "";
+
+                        if (annotation instanceof NormalAnnotationExpr) {
+                            for (MemberValuePair pair : ((NormalAnnotationExpr) annotation).getPairs()) {
+                                if (pair.getNameAsString().equals("converter")) {
+                                	converter = pair.getValue().toString();
+                                	if (converter.equals("DoubleConverter.class")) {
+                                		pair.setValue(new NameExpr("BigDecimalConverter.class"));
+                                		compilationUnit.addImport("com.prios.core.a.util.BigDecimalConverter");
+                                		compilationUnit.getImports().removeIf(i -> i.getNameAsString().equals("com.prios.tools.config.data.DoubleConverter"));
+                                	}
+                                	if (converter.equals("FloatConverter.class")) {
+                                		pair.setValue(new NameExpr("BigDecimalConverter.class"));
+                                		compilationUnit.addImport("com.prios.core.a.util.BigDecimalConverter");
+                                		compilationUnit.getImports().removeIf(i -> i.getNameAsString().equals("com.prios.tools.config.data.FloatConverter"));
+                                	}
+                                	if (converter.equals("DateConverter.class")) {
+                                		pair.setValue(new NameExpr("LocalDateTimeConverter.class"));
+                                		compilationUnit.addImport("com.prios.tools.config.data.LocalDateTimeConverter");
+                                		compilationUnit.getImports().removeIf(i -> i.getNameAsString().equals("com.prios.tools.config.data.DateConverter"));
+                                	}
+                                	break;
+                                }
+                            }
+                        }
+
+                    });
 
                     return super.visit(field, arg);
                 }
             }, null);
             
-            // 2) Remplacer les types Date → LocalDateTime et Double/Float → BigDecimal
+            // 3) Remplacer les types Date → LocalDateTime et Double/Float → BigDecimal et Boolean → boolean
             compilationUnit.accept(new ModifierVisitor<Void>() {
                 @Override
                 public Visitable visit(FieldDeclaration field, Void arg) {
@@ -446,14 +501,57 @@ public class SwaggerGeneratorService {
                             String typeName = type.getNameAsString();
 
                             switch (typeName) {
+                            	case "Boolean":
+                            		type.setName("boolean");
+                                break;
                                 case "Date":
                                     type.setName("LocalDateTime");
+                            		compilationUnit.addImport("java.time.LocalDateTime");
+                            		compilationUnit.getImports().removeIf(i -> i.getNameAsString().equals("java.util.Date"));
                                     break;
-
                                 case "Double":
                                 case "Float":
+                                case "BigDecimal":
+                                    int integerValue = 0;
+                                    int fractionValue = 0;
+
+                                    Optional<AnnotationExpr> annotationOpt = field.getAnnotationByName("Digits");
+                                    if (annotationOpt.isPresent()) {
+                                        AnnotationExpr annotation = annotationOpt.get();
+                                        if (annotation.isNormalAnnotationExpr()) {
+                                            for (MemberValuePair pair : annotation.asNormalAnnotationExpr().getPairs()) {
+                                                if (pair.getNameAsString().equals("integer")) {
+                                                    integerValue = Integer.parseInt(pair.getValue().toString());
+                                                } else if (pair.getNameAsString().equals("fraction")) {
+                                                    fractionValue = Integer.parseInt(pair.getValue().toString());
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    int precision = integerValue + fractionValue;
+                                    int scale = fractionValue;
+
+                                    boolean hasColumn = field.getAnnotationByName("Column").isPresent();
+                                    if (!hasColumn) {
+                                        NormalAnnotationExpr columnAnnotation = new NormalAnnotationExpr();
+                                        columnAnnotation.setName("Column");
+                                        NodeList<MemberValuePair> pairs = new NodeList<>();
+                                        pairs.add(new MemberValuePair("precision", new IntegerLiteralExpr(String.valueOf(precision))));
+                                        pairs.add(new MemberValuePair("scale", new IntegerLiteralExpr(String.valueOf(scale))));
+                                        columnAnnotation.setPairs(pairs);
+                                        field.addAnnotation(columnAnnotation);
+
+                                        // S'assurer que l'import de javax.persistence.Column est présent
+                                        compilationUnit.addImport("javax.persistence.Column");
+                                    }
+
                                     type.setName("BigDecimal");
-                                    break;
+                                    compilationUnit.addImport("java.math.BigDecimal");
+                                    compilationUnit.getImports()
+                                            .removeIf(i -> i.getNameAsString().equals("java.lang.Double")
+                                                    || i.getNameAsString().equals("java.lang.Float"));
+                                
                             }
                         });
                     });

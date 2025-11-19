@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ import com.github.javaparser.javadoc.Javadoc;
 
 @Service
 public class JavaClassGeneratorService {
+	
+	private static final Random random = new Random();
 
 	public Map<String, String> generate(String javaClassContent, String javaViewClassContent, boolean deleteRecord,
 			boolean idCompany) {
@@ -33,21 +37,48 @@ public class JavaClassGeneratorService {
 		String lowerClassNamePlural = toPlural(lowerClassName);
 		String classNamePlural = toPlural(className);
 		String classNameImport = classNameToPackage(className);
+		
+		StringBuilder entity = new StringBuilder();
+        StringBuilder dto = new StringBuilder();
+        StringBuilder entityView = new StringBuilder();
+        StringBuilder dtoView = new StringBuilder();
+        generateEntityAndDto(javaClassContent, "", entity, dto, className, entityName, lowerClassName, "");
+        entity.append(System.lineSeparator());
+        dto.append(System.lineSeparator());
+        generateEntityAndDto(javaClassContent, "", entity, dto, className, entityName, lowerClassName, "2");
+        if (hasView) {
+    		entityView.append(System.lineSeparator());
+    		dtoView.append(System.lineSeparator());
+            generateEntityAndDto(javaViewClassContent, javaClassContent, entityView, dtoView, className + "View", className + "View", lowerClassName + "View", "");
+            entityView.append(System.lineSeparator());
+            dtoView.append(System.lineSeparator());
+            generateEntityAndDto(javaViewClassContent, javaClassContent, entityView, dtoView, className + "View", className + "View", lowerClassName + "View", "2");
+        }
 
-		response.put("mapper",
-				generateMapper(api, classNameImport, className, lowerClassName, lowerClassNamePlural, entityName));
+		response.put("mapper", generateMapper(api, classNameImport, className, classNamePlural, lowerClassName,
+				lowerClassNamePlural, entityName));
+		response.put("mapperTest", generateMapperTest(api, classNameImport, className, classNamePlural, lowerClassName,
+				lowerClassNamePlural, entityName, entity.toString(), dto.toString()));
 		if (hasView) {
-			String lowerClassNameViewPlural = toPlural(lowerClassName + "View");
-			response.put("mapperView", generateMapper(api, classNameImport, className + "View", lowerClassName + "View",
-					lowerClassNameViewPlural, className + "View"));
+			response.put("mapperView", generateMapper(api, classNameImport, className + "View", className + "Views", lowerClassName + "View",
+					lowerClassName + "Views", className + "View"));
+
+			response.put("mapperViewTest", generateMapperTest(api, classNameImport, className + "View", className + "Views", lowerClassName + "View",
+					lowerClassName + "Views", className + "View", entityView.toString(), dtoView.toString()));
 
 		}
 		response.put("service", generateService(api, classNameImport, className, lowerClassName, lowerClassNamePlural,
 				entityName, hasView, deleteRecord, idCompany));
 		response.put("serviceImpl",
-				generateServiceImpl(api, classNameImport, className, entityName, hasView, deleteRecord, idCompany));
+				generateServiceImpl(api, classNameImport, className, lowerClassName, hasView, deleteRecord, idCompany));		
+		response.put("serviceImplTest",
+				generateServiceTest(api, classNameImport, className, classNamePlural, lowerClassName,
+						lowerClassNamePlural, entityName, entity.toString(), entityView.toString(), hasView, deleteRecord, idCompany));
 		response.put("controller", generateController(api, classNameImport, className, classNamePlural, lowerClassName,
 				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany));
+		response.put("controllerTest",
+						generateControllerTest(api, classNameImport, className, classNamePlural, lowerClassName,
+								lowerClassNamePlural, entityName, entity.toString(), entityView.toString(), dto.toString(), dtoView.toString(), hasView, deleteRecord, idCompany));
 		
 		final String[] tabInfo = {null, null};  // Tableau pour stocker le titre et la description
         try {
@@ -156,7 +187,7 @@ public class JavaClassGeneratorService {
 		return sb.toString();
 	}
 
-	public String generateMapper(String api, String classNameImport, String className, String lowerClassName,
+	public String generateMapper(String api, String classNameImport, String className, String classNamePlural, String lowerClassName,
 			String lowerClassNamePlural, String entityName) {
 
 		StringBuilder mapperBuilder = new StringBuilder();
@@ -177,14 +208,14 @@ public class JavaClassGeneratorService {
 
 		// ✅ Méthodes de mapping
 		mapperBuilder.append("    List<").append(entityName).append("> ").append(lowerClassName).append("DtosTo")
-				.append(className).append("s(List<").append(className).append("Dto> ").append(lowerClassName)
+				.append(classNamePlural).append("(List<").append(className).append("Dto> ").append(lowerClassName)
 				.append("Dtos);\n\n");
 
 		mapperBuilder.append("    ").append(className).append("Dto ").append(lowerClassName).append("To")
 				.append(className).append("Dto(").append(entityName).append(" ").append(lowerClassName)
 				.append(");\n\n");
 
-		mapperBuilder.append("    List<").append(className).append("Dto> ").append(lowerClassName).append("sTo")
+		mapperBuilder.append("    List<").append(className).append("Dto> ").append(lowerClassNamePlural).append("To")
 				.append(className).append("Dtos(List<").append(entityName).append("> ").append(lowerClassNamePlural)
 				.append(");\n\n");
 
@@ -302,7 +333,7 @@ public class JavaClassGeneratorService {
 		}
 		serviceImplBuilder.append("Specification;\n").append("import com.prios.tools.util.criteria.SearchCriteria;\n")
 				.append("import com.prios.tools.util.criteria.specification.PriosParams;\n\n")
-				.append("import lombok.NonNull;\n").append("import lombok.RequiredArgsConstructor;\n\n");
+				.append("import lombok.RequiredArgsConstructor;\n\n");
 
 		// ✅ CLASS DECLARATION
 		serviceImplBuilder.append("@RequiredArgsConstructor\n").append("@Service\n").append("public class ")
@@ -325,27 +356,33 @@ public class JavaClassGeneratorService {
 		serviceImplBuilder.append("> implements ").append(className).append("Service {\n\n");
 
 		// ✅ FIELDS
-		serviceImplBuilder.append("    @NonNull\n").append("    private final ").append(className).append("Repository ")
+		serviceImplBuilder.append("    private final ").append(className).append("Repository ")
 				.append(lowerClassName).append("Repository;\n\n");
 
 		if (hasView) {
-			serviceImplBuilder.append("    @NonNull\n").append("    private final ").append(className)
+			serviceImplBuilder.append("    private final ").append(className)
 					.append("ViewRepository ").append(lowerClassName).append("ViewRepository;\n\n");
 		}
 
 		// ✅ findAll
 		serviceImplBuilder.append("    @Override\n").append("    public List<").append(className)
-				.append("Table> findAll(List<SearchCriteria> requestParams, int idCompany,\n")
-				.append("            int idEstablishment, String deleteRecord) throws ResponseStatusException {\n")
+				.append("Table> findAll(List<SearchCriteria> requestParams");
+		if (idCompany) {
+			serviceImplBuilder.append(", int idCompany, int idEstablishment");
+		}
+		if (deleteRecord) {
+			serviceImplBuilder.append(", String deleteRecord");
+		}
+		serviceImplBuilder.append(") {\n")
 				.append("        PriosParams params = new PriosParams(");
 		if (idCompany) {
 			serviceImplBuilder.append("idCompany,idEstablishment,");
 		}
 		serviceImplBuilder.append("requestParams");
 		if (deleteRecord) {
-			serviceImplBuilder.append(",deleteRecord);\n");
+			serviceImplBuilder.append(",deleteRecord");
 		}
-		serviceImplBuilder.append("        return ").append(lowerClassName)
+		serviceImplBuilder.append(");\n        return ").append(lowerClassName)
 				.append("Repository.findAll(table(params));\n").append("    }\n\n");
 
 		// ✅ findAllView (si hasView)
@@ -474,7 +511,7 @@ public class JavaClassGeneratorService {
 		}
 
 		controllerBuilder.append("        return ResponseEntity.ok(new ArrayList<>(\n").append("            ")
-				.append(lowerClassName).append("Mapper.").append(lowerClassName).append("sTo").append(className)
+				.append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className)
 				.append("Dtos(\n").append("                ").append(lowerClassName)
 				.append("Service.findAll(SearchUtils.getRequestParams(this, MethodUtils.getMethodName(), criteriaParam)");
 		if (idCompany)
@@ -535,11 +572,11 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("  description: \"").append(description).append("\"\n");
 		swaggerBuilder.append("  version: 1.0.0\n\n");
 		swaggerBuilder.append("paths:\n");
-		swaggerBuilder.append("  /v1/").append(lowerClassNamePlural).append("s:\n");
+		swaggerBuilder.append("  /v1/").append(lowerClassNamePlural).append(":\n");
 		swaggerBuilder.append("    get:\n");
 		swaggerBuilder.append("      summary: Récupère la liste des ").append(className).append("\n");
 		swaggerBuilder.append("      description: Récupère la liste des ").append(className).append("\n");
-		swaggerBuilder.append("      operationId: getAll").append(className).append("\n");
+		swaggerBuilder.append("      operationId: getAll").append(classNamePlural).append("\n");
 		swaggerBuilder.append("      tags:\n");
 		swaggerBuilder.append("        - ").append(className).append("\n");
 		swaggerBuilder.append("      parameters:\n");
@@ -552,18 +589,16 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("          schema:\n");
 		swaggerBuilder.append("            type: object\n");
 		swaggerBuilder.append("            additionalProperties: true\n");
-		if (idCompany) {
-			swaggerBuilder.append("        - name: idCompany\n");
-			swaggerBuilder.append("          in: header\n");
-			swaggerBuilder.append("          required: true\n");
-			swaggerBuilder.append("          schema:\n");
-			swaggerBuilder.append("            type: integer\n");
-			swaggerBuilder.append("        - name: idEstablishment\n");
-			swaggerBuilder.append("          in: header\n");
-			swaggerBuilder.append("          required: true\n");
-			swaggerBuilder.append("          schema:\n");
-			swaggerBuilder.append("            type: integer\n");
-		}
+		swaggerBuilder.append("        - name: idCompany\n");
+		swaggerBuilder.append("          in: header\n");
+		swaggerBuilder.append("          required: true\n");
+		swaggerBuilder.append("          schema:\n");
+		swaggerBuilder.append("            type: integer\n");
+		swaggerBuilder.append("        - name: idEstablishment\n");
+		swaggerBuilder.append("          in: header\n");
+		swaggerBuilder.append("          required: true\n");
+		swaggerBuilder.append("          schema:\n");
+		swaggerBuilder.append("            type: integer\n");
 		if (deleteRecord) {
 			swaggerBuilder.append("        - name: deleteRecord\n");
 			swaggerBuilder.append("          in: query\n");
@@ -582,21 +617,29 @@ public class JavaClassGeneratorService {
 		}
 		swaggerBuilder.append("      responses:\n");
 		swaggerBuilder.append("        \"200\":\n");
-		swaggerBuilder.append("          description: Liste des ").append(className)
-				.append("s récupérée avec succès\n");
+		swaggerBuilder.append("          description: Liste des ").append(classNamePlural)
+				.append(" récupérée avec succès\n");
 		swaggerBuilder.append("          content:\n");
 		swaggerBuilder.append("            application/json:\n");
 		swaggerBuilder.append("              schema:\n");
 		swaggerBuilder.append("                type: array\n");
 		swaggerBuilder.append("                items:\n");
-		swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n\n");
+		swaggerBuilder.append("                  $ref: \"#/components/schemas/");
+		if (hasView) {
+			swaggerBuilder.append("Abstract");
+		}
+		swaggerBuilder.append(className).append("\"\n\n");
 		swaggerBuilder.append("            application/xml:\n");
 		swaggerBuilder.append("              schema:\n");
 		swaggerBuilder.append("                type: array\n");
 		swaggerBuilder.append("                items:\n");
-		swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n\n");
+		swaggerBuilder.append("                  $ref: \"#/components/schemas/");
+		if (hasView) {
+			swaggerBuilder.append("Abstract");
+		}
+		swaggerBuilder.append(className).append("\"\n\n");
 
-		swaggerBuilder.append("  /v1/").append(lowerClassNamePlural).append("s/{id}:\n");
+		swaggerBuilder.append("  /v1/").append(lowerClassNamePlural).append("/{id}:\n");
 		swaggerBuilder.append("    get:\n");
 		swaggerBuilder.append("      summary: Récupère un ").append(className).append(" par son id\n");
 		swaggerBuilder.append("      description: Récupère un ").append(className).append(" par son id\n");
@@ -609,18 +652,16 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("          required: true\n");
 		swaggerBuilder.append("          schema:\n");
 		swaggerBuilder.append("            type: integer\n");
-		if (idCompany) {
-			swaggerBuilder.append("        - name: idCompany\n");
-			swaggerBuilder.append("          in: header\n");
-			swaggerBuilder.append("          required: true\n");
-			swaggerBuilder.append("          schema:\n");
-			swaggerBuilder.append("            type: integer\n");
-			swaggerBuilder.append("        - name: idEstablishment\n");
-			swaggerBuilder.append("          in: header\n");
-			swaggerBuilder.append("          required: true\n");
-			swaggerBuilder.append("          schema:\n");
-			swaggerBuilder.append("            type: integer\n");
-		}
+		swaggerBuilder.append("        - name: idCompany\n");
+		swaggerBuilder.append("          in: header\n");
+		swaggerBuilder.append("          required: true\n");
+		swaggerBuilder.append("          schema:\n");
+		swaggerBuilder.append("            type: integer\n");
+		swaggerBuilder.append("        - name: idEstablishment\n");
+		swaggerBuilder.append("          in: header\n");
+		swaggerBuilder.append("          required: true\n");
+		swaggerBuilder.append("          schema:\n");
+		swaggerBuilder.append("            type: integer\n");
 		if (hasView) {
 			swaggerBuilder.append("        - name: detail\n");
 			swaggerBuilder.append("          in: query\n");
@@ -635,7 +676,11 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("          content:\n");
 		swaggerBuilder.append("            application/json:\n");
 		swaggerBuilder.append("              schema:\n");
-		swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+		swaggerBuilder.append("                $ref: \"#/components/schemas/");
+		if (hasView) {
+			swaggerBuilder.append("Abstract");
+		}
+		swaggerBuilder.append(className).append("\"\n");
 		swaggerBuilder.append("        \"404\":\n");
 		swaggerBuilder.append("          description: ").append(className).append(" non trouvé\n\n");
 		swaggerBuilder.append("components:\n");
@@ -644,11 +689,735 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("      type: object\n");
 		swaggerBuilder.append("      properties:\n");
 		swaggerBuilder.append(extractClassProperties(javaClass));
+		
+		if (hasView) {
+			swaggerBuilder.append("\n    ").append(className).append("View:\n")
+			.append("      allOf:\n")
+			.append("        - $ref: '#/components/schemas/").append(className).append("'\n")
+			.append("      type: object\n")
+			.append("      properties:\n")
+			.append(extractClassProperties(viewClass)).append("\n")
+			
+			.append("    Abstract").append(className).append(":\n")
+			.append("      oneOf:\n")
+			.append("        - $ref: '#/components/schemas/").append(className).append("'\n")
+			.append("        - $ref: '#/components/schemas/").append(className).append("View'\n");
+		}
 
 		return swaggerBuilder.toString();
 
 	}
+	
+	public String generateMapperTest(String api, String classNameImport, String className, String classNamePlural, String lowerClassName,
+			String lowerClassNamePlural, String entityName, String entity, String dto) {
 
+		StringBuilder mapperTestBuilder = new StringBuilder();
+		
+		// ✅ Package
+		mapperTestBuilder.append("package com.prios.api.a.").append(api).append(".mapper.").append(classNameImport)
+				.append(";\n\n");
+		
+		// ✅ Imports
+	    mapperTestBuilder.append("import static org.assertj.core.api.Assertions.assertThat;\n\n")
+	            .append("import java.math.BigDecimal;\n")
+	            .append("import java.time.LocalDateTime;\n")
+	            .append("import java.time.ZoneId;\n")
+	            .append("import java.time.ZonedDateTime;\n")
+	            .append("import java.time.temporal.ChronoUnit;\n")
+	            .append("import java.util.Comparator;\n")
+	            .append("import java.util.Date;\n")
+	            .append("import java.util.List;\n")
+	            .append("import java.util.Optional;\n\n")
+	            .append("import org.junit.jupiter.api.BeforeEach;\n")
+	            .append("import org.junit.jupiter.api.Test;\n\n")
+	            .append("import com.prios.core.a.common.history.management.HistoryManagementA;\n")
+	            .append("import com.prios.core.a.shared.dto.common.HistoryManagementADto;\n")
+	            .append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n")
+	            .append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(entityName).append(";\n\n");
+		
+	 // ✅ Déclaration de la classe
+		mapperTestBuilder.append("class ").append(className).append("MapperTest {\n\n")
+				.append("    private ").append(className).append("Mapper ").append(lowerClassName).append("Mapper;\n\n")
+				.append("    ")	.append(className).append("Dto ").append(lowerClassName).append("Dto;\n")
+				.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto2;\n\n")
+				.append("    ").append(entityName).append(" ").append(lowerClassName).append(";\n")
+				.append("    ").append(entityName).append(" ").append(lowerClassName).append("2;\n\n");
+
+		// ✅ Setup
+		mapperTestBuilder.append("    @BeforeEach\n").append("    void setUp() {\n")
+				.append("        ").append(lowerClassName).append("Mapper = new ").append(className).append("MapperImpl();\n\n")
+				.append(getHistoryManagement()).append("\n").append(entity).append("\n").append(dto).append("    }\n\n");
+
+		// ✅ Tests
+		// testDtosToEntities
+		mapperTestBuilder.append("    @Test\n").append("    void test").append(className).append("DtosTo")
+				.append(classNamePlural).append("() {\n")
+				.append("        //GIVEN \n")
+				.append("        List<").append(className).append("Dto> ")
+				.append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto, ")
+				.append(lowerClassName).append("Dto2);\n").append("        List<").append(entityName).append("> ")
+				.append(lowerClassNamePlural).append("ToCompare = List.of(").append(lowerClassName).append(", ")
+				.append(lowerClassName).append("2);\n\n").append("        //WHEN \n").append("        List<").append(entityName).append("> ")
+				.append(lowerClassNamePlural).append(" = ").append(lowerClassName).append("Mapper.")
+				.append(lowerClassName).append("DtosTo").append(classNamePlural).append("(").append(lowerClassName)
+				.append("Dtos);\n\n").append("        //THEN \n").append("        assertThat(").append(lowerClassNamePlural)
+				.append("ToCompare).usingRecursiveComparison()\n")
+				.append("                .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+				.append("                .isNotNull().isEqualTo(").append(lowerClassNamePlural).append(");\n")
+				.append("    }\n\n");
+
+		// testEntityToDto
+		mapperTestBuilder.append("    @Test\n").append("    void test").append(className).append("To").append(className)
+				.append("Dto() {\n").append("        //GIVEN WHEN \n").append("        ").append(className).append("Dto ").append(lowerClassName)
+				.append("DtoToCompare = ").append(lowerClassName).append("Mapper.").append(lowerClassName).append("To")
+				.append(className).append("Dto(").append(lowerClassName).append(");\n\n").append("        //THEN \n").append("        assertThat(")
+				.append(lowerClassName).append("DtoToCompare).usingRecursiveComparison()\n")
+				.append("                .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+				.append("                .isEqualTo(").append(lowerClassName).append("Dto);\n").append("    }\n\n");
+
+		// testEntitiesToDtos
+		mapperTestBuilder.append("    @Test\n").append("    void test").append(classNamePlural).append("To")
+				.append(className).append("Dtos() {\n").append("        //GIVEN \n").append("        List<").append(entityName).append("> ")
+				.append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(", ")
+				.append(lowerClassName).append("2);\n").append("        List<").append(className).append("Dto> ")
+				.append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto, ")
+				.append(lowerClassName).append("Dto2);\n\n").append("        //WHEN \n").append("        List<").append(className).append("Dto> ")
+				.append(lowerClassName).append("DtosToCompare = ").append(lowerClassName).append("Mapper.")
+				.append(lowerClassNamePlural).append("To").append(className).append("Dtos(")
+				.append(lowerClassNamePlural).append(");\n\n").append("        //THEN \n").append("        assertThat(").append(lowerClassName)
+				.append("DtosToCompare).usingRecursiveComparison()\n")
+				.append("                .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+				.append("                .isNotNull().isEqualTo(").append(lowerClassName).append("Dtos);\n")
+				.append("    }\n\n");
+
+		// testOptionalEntityToOptionalDto
+		mapperTestBuilder.append("    @Test\n").append("    void testOptional").append(className).append("ToOptional")
+				.append(className).append("Dto() {\n").append("        //GIVEN \n").append("        Optional<").append(entityName)
+				.append("> optional").append(className).append(" = Optional.of(").append(lowerClassName).append(");\n\n").append("        //WHEN \n")
+				.append("        Optional<").append(className).append("Dto> optional").append(className)
+				.append("Dto = ").append(lowerClassName).append("Mapper.optional").append(className)
+				.append("ToOptional").append(className).append("Dto(optional").append(className).append(");\n\n").append("        //THEN \n")
+				.append("        assertThat(optional").append(className).append("Dto).usingRecursiveComparison()\n")
+				.append("                .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+				.append("                .isNotNull().isEqualTo(Optional.of(").append(lowerClassName).append("Dto));\n")
+				.append("    }\n\n");
+
+		// testOptionalEmpty
+		mapperTestBuilder.append("    @Test\n").append("    void testOptional").append(className).append("ToOptional")
+				.append(className).append("DtoEmpty() {\n").append("        //GIVEN \n").append("        Optional<").append(entityName)
+				.append("> optional").append(entityName).append(" = Optional.empty();\n\n").append("        //WHEN \n").append("        Optional<")
+				.append(className).append("Dto> optional").append(className).append("Dto = ").append(lowerClassName)
+				.append("Mapper.optional").append(className).append("ToOptional").append(className)
+				.append("Dto(optional").append(entityName).append(");\n\n").append("        //THEN \n").append("        assertThat(optional")
+				.append(className).append("Dto).isEmpty();\n").append("    }\n\n");
+
+		// testDtosToEntities_emptyList
+		mapperTestBuilder.append("    @Test\n").append("    void test").append(className).append("DtosTo")
+				.append(classNamePlural).append("_emptyList() {\n").append("        //GIVEN \n").append("        List<").append(className)
+				.append("Dto> ").append(lowerClassName).append("Dtos = List.of();\n\n").append("        //WHEN \n").append("        List<")
+				.append(entityName).append("> ").append(lowerClassNamePlural).append(" = ").append(lowerClassName)
+				.append("Mapper.").append(lowerClassName).append("DtosTo").append(classNamePlural).append("(")
+				.append(lowerClassName).append("Dtos);\n\n").append("        //THEN \n").append("        assertThat(").append(lowerClassNamePlural)
+				.append(").isNotNull().isEmpty();\n").append("    }\n\n");
+
+		// testEntityToDto_null
+		mapperTestBuilder.append("    @Test\n").append("    void test").append(className).append("To").append(className)
+				.append("Dto_null() {\n").append("        //GIVEN WHEN\n").append("        ").append(className).append("Dto ").append(lowerClassName)
+				.append("DtoNull = ").append(lowerClassName).append("Mapper.").append(lowerClassName).append("To")
+				.append(className).append("Dto(null);\n\n").append("        //THEN \n").append("        assertThat(").append(lowerClassName)
+				.append("DtoNull).isNull();\n").append("    }\n\n");
+
+		// testOptionalEmpty_null
+		mapperTestBuilder.append("    @Test\n").append("    void testOptional").append(className).append("ToOptional")
+				.append(className).append("Dto_null() {\n").append("        //GIVEN WHEN\n").append("        Optional<").append(className)
+				.append("Dto> optional").append(className).append("Dto = ").append(lowerClassName)
+				.append("Mapper.optional").append(className).append("ToOptional").append(className)
+				.append("Dto(Optional.empty());\n\n").append("        //THEN \n").append("        assertThat(optional").append(className)
+				.append("Dto).isEmpty();\n").append("    }\n\n");
+
+		// ✅ Fin de la classe
+		mapperTestBuilder.append("}\n");
+
+	    return mapperTestBuilder.toString();
+	}
+	
+	private String generateServiceTest(String api, String classNameImport, String className, String classNamePlural, String lowerClassName,
+			String lowerClassNamePlural, String entityName, String entity, String entityView, boolean hasView, boolean deleteRecord, boolean idCompany) {
+
+		StringBuilder serviceTest = new StringBuilder();
+
+		// --- Package & Imports ---
+		serviceTest.append("package com.prios.api.a.").append(api).append(".service.").append(classNameImport).append(";\n\n")
+		.append("import static org.assertj.core.api.Assertions.assertThat;\n")
+		.append("import static org.mockito.ArgumentMatchers.anyInt;\n")
+		.append("import static org.mockito.Mockito.times;\n")
+		.append("import static org.mockito.Mockito.verify;\n")
+		.append("import static org.mockito.Mockito.when;\n\n")
+		.append("import java.math.BigDecimal;\n")
+		.append("import java.time.LocalDateTime;\n")
+		.append("import java.time.ZoneId;\n")
+		.append("import java.time.ZonedDateTime;\n")
+		.append("import java.util.Date;\n")
+		.append("import java.util.Optional;\n\n")
+		.append("import org.junit.jupiter.api.BeforeEach;\n")
+		.append("import org.junit.jupiter.api.Test;\n")
+		.append("import org.junit.jupiter.api.extension.ExtendWith;\n")
+		.append("import org.mockito.InjectMocks;\n")
+		.append("import org.mockito.Mock;\n")
+		.append("import org.mockito.junit.jupiter.MockitoExtension;\n\n")
+		.append("import com.prios.api.a.").append(api).append(".repository.").append(classNameImport).append(".").append(className).append("Repository;\n");
+
+		if (hasView) {
+			serviceTest.append("import com.prios.api.a.").append(api).append(".repository.").append(classNameImport).append(".").append(className).append("ViewRepository;\n");
+		}
+
+		serviceTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(entityName).append(";\n")
+		.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n")
+		.append("import com.prios.core.a.shared.dto.common.HistoryManagementADto;\n")
+		.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n");
+
+		if (hasView) {
+			serviceTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n")
+			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n");
+		}
+
+		serviceTest.append("\n@ExtendWith(MockitoExtension.class)\n")
+		.append("class ").append(className).append("ServiceImplTest {\n\n")
+		.append("    @InjectMocks\n")
+		.append("    ").append(className).append("ServiceImpl ").append(lowerClassName).append("Service;\n\n")
+		.append("    @Mock\n")
+		.append("    private ").append(className).append("Repository ").append(lowerClassName).append("Repository;\n\n");
+
+		if (hasView) {
+			serviceTest.append("    @Mock\n")
+			.append("    private ").append(className).append("ViewRepository ").append(lowerClassName).append("ViewRepository;\n\n");
+		}
+
+		serviceTest.append("    ").append(entityName).append(" ").append(lowerClassName).append(";\n")
+		.append("    ").append(entityName).append(" ").append(lowerClassName).append("2;\n")
+		.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto;\n")
+		.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto2;\n\n");
+
+		if (hasView) {
+			serviceTest.append("    ").append(className).append("View ").append(lowerClassName).append("View;\n")
+			.append("    ").append(className).append("View ").append(lowerClassName).append("View2;\n")
+			.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto;\n")
+			.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto2;\n\n");
+		}
+
+		// --- setUp() ---
+		serviceTest.append("    @BeforeEach\n")
+		.append("    void setUp() {\n")
+		.append(getHistoryManagement())
+		.append(System.lineSeparator())
+		.append(entity);
+
+		if (hasView) {
+			serviceTest.append(System.lineSeparator())
+			.append(entityView)
+			.append(System.lineSeparator());
+		}
+
+		serviceTest.append("    }\n\n");
+
+		// --- Tests de base : findById / findById_notFound ---
+		serviceTest.append("    @Test\n")
+		.append("    void testFindById() {\n").append("        //GIVEN \n")
+		.append("        when(").append(lowerClassName).append("Repository.findById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("));\n\n").append("        //WHEN \n")
+		.append("        Optional<").append(entityName).append("> result = ").append(lowerClassName).append("Service.findById(8);\n\n").append("        //THEN \n")
+		.append("        verify(").append(lowerClassName).append("Repository, times(1)).findById(8);\n")
+		.append("        assertThat(result).isPresent();\n")
+		.append("        assertThat(result.get().getId()).isEqualTo(8);\n")
+		.append("    }\n\n")
+
+		.append("    @Test\n")
+		.append("    void testFindById_notFound() {\n").append("        //GIVEN \n")
+		.append("        when(").append(lowerClassName).append("Repository.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
+		.append("        Optional<").append(entityName).append("> result = ").append(lowerClassName).append("Service.findById(404);\n\n").append("        //THEN \n")
+		.append("        verify(").append(lowerClassName).append("Repository, times(1)).findById(404);\n")
+		.append("        assertThat(result).isNotNull().isEmpty();\n")
+		.append("    }\n\n");
+
+		if (hasView) {
+			serviceTest.append("    @Test\n")
+			.append("    void testFindViewById() {\n").append("        //GIVEN \n")
+			.append("        when(").append(lowerClassName).append("ViewRepository.findById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("View));\n\n").append("        //WHEN \n")
+			.append("        Optional<").append(className).append("View> result = ").append(lowerClassName).append("Service.findViewById(8);\n\n").append("        //THEN \n")
+			.append("        verify(").append(lowerClassName).append("ViewRepository, times(1)).findById(8);\n")
+			.append("        assertThat(result).isPresent();\n")
+			.append("        assertThat(result.get().getId()).isEqualTo(8);\n")
+			.append("    }\n\n")
+
+			.append("    @Test\n")
+			.append("    void testFindViewById_notFound() {\n").append("        //GIVEN \n")
+			.append("        when(").append(lowerClassName).append("ViewRepository.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
+			.append("        Optional<").append(className).append("View> result = ").append(lowerClassName).append("Service.findViewById(404);\n\n").append("        //THEN \n")
+			.append("        verify(").append(lowerClassName).append("ViewRepository, times(1)).findById(404);\n")
+			.append("        assertThat(result).isNotNull().isEmpty();\n")
+			.append("    }\n\n");
+		}
+
+		serviceTest.append("}\n");
+
+		return serviceTest.toString();
+	}
+
+	private String generateControllerTest(String api, String classNameImport, String className, String classNamePlural,
+			String lowerClassName, String lowerClassNamePlural, String entityName, String entity, String entityView,
+			String dto, String dtoView, boolean hasView, boolean deleteRecord, boolean idCompany) {
+
+				
+		StringBuilder controllerTest = new StringBuilder();
+
+		// --- Package & Imports ---
+		controllerTest.append("package com.prios.api.a.").append(api).append(".controller.").append(classNameImport).append(";\n\n")
+		.append("import static org.assertj.core.api.Assertions.assertThat;\n")
+		.append("import static org.mockito.ArgumentMatchers.any;\n")
+		.append("import static org.mockito.ArgumentMatchers.anyInt;\n")
+		.append("import static org.mockito.ArgumentMatchers.anyString;\n")
+		.append("import static org.mockito.Mockito.times;\n")
+		.append("import static org.mockito.Mockito.verify;\n")
+		.append("import static org.mockito.Mockito.when;\n\n")
+		.append("import java.math.BigDecimal;\n")
+		.append("import java.time.LocalDateTime;\n")
+		.append("import java.time.ZoneId;\n")
+		.append("import java.time.ZonedDateTime;\n")
+		.append("import java.time.temporal.ChronoUnit;\n")
+        .append("import java.util.Comparator;\n")
+		.append("import java.util.Date;\n")
+		.append("import java.util.List;\n")
+		.append("import java.util.Optional;\n\n")
+		.append("import org.junit.jupiter.api.BeforeEach;\n")
+		.append("import org.junit.jupiter.api.Test;\n")
+		.append("import org.junit.jupiter.api.extension.ExtendWith;\n")
+		.append("import org.mockito.InjectMocks;\n")
+		.append("import org.mockito.Mock;\n")
+		.append("import org.mockito.junit.jupiter.MockitoExtension;\n")
+		.append("import org.springframework.http.HttpStatus;\n")
+		.append("import org.springframework.http.ResponseEntity;\n\n")
+		.append("import com.prios.api.a.").append(api).append(".mapper.").append(classNameImport).append(".").append(className).append("Mapper;\n");
+		if (hasView) {
+			controllerTest.append("import com.prios.api.a.").append(api).append(".mapper.").append(classNameImport).append(".").append(className).append("ViewMapper;\n");
+		}
+		controllerTest.append("import com.prios.api.a.").append(api).append(".service.").append(classNameImport).append(".").append(className).append("ServiceImpl;\n")
+		.append("import com.prios.api.a.").append(api).append(".controller.").append(classNameImport).append(".").append(className).append("ControllerRest;\n")
+		.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(entityName).append(";\n")
+		.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n")
+		.append("import com.prios.core.a.shared.dto.common.HistoryManagementADto;\n")
+		.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n");
+
+		if (hasView) {
+			controllerTest.append("import com.prios.api.a.").append(api).append(".mapper.").append(classNameImport).append(".").append(className).append("ViewMapper;\n")
+			.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n")
+			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n")
+			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append("Abstract").append(className).append("Dto;\n");
+		}
+
+		controllerTest.append("\n@ExtendWith(MockitoExtension.class)\n")
+		.append("class ").append(className).append("ControllerTest {\n\n")
+		.append("    @Mock\n")
+		.append("    ").append(className).append("ServiceImpl ").append(lowerClassName).append("Service;\n\n")
+		.append("    @Mock\n")
+		.append("    ").append(className).append("Mapper ").append(lowerClassName).append("Mapper;\n\n");
+
+		if (hasView) {
+			controllerTest.append("    @Mock\n")
+			.append("    ").append(className).append("ViewMapper ").append(lowerClassName).append("ViewMapper;\n\n");
+		}
+
+		controllerTest.append("    @InjectMocks\n")
+		.append("    ").append(className).append("ControllerRest ").append(lowerClassName).append("ControllerRest;\n\n")
+		.append("    ").append(entityName).append(" ").append(lowerClassName).append(";\n")
+		.append("    ").append(entityName).append(" ").append(lowerClassName).append("2;\n");
+
+		if (hasView) {
+			controllerTest.append("    ").append(className).append("View ").append(lowerClassName).append("View;\n")
+			.append("    ").append(className).append("View ").append(lowerClassName).append("View2;\n");
+		}
+
+		controllerTest.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto;\n")
+		.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto2;\n");
+
+		if (hasView) {
+			controllerTest.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto;\n")
+			.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto2;\n");
+		}
+
+		// --- setUp() ---
+		controllerTest.append("\n    @BeforeEach\n")
+		.append("    void setUp() {\n")
+		.append(getHistoryManagement()).append("\n")
+		.append(entity).append("\n")
+		.append(dto).append("\n");
+
+		if (hasView) {
+			controllerTest.append(entityView).append("\n")
+			.append(dtoView).append("\n");
+		}
+
+		controllerTest.append("    }\n\n");
+
+		// --- Tests getAll ---
+		controllerTest.append("    @Test\n")
+		.append("    void testGetAll").append(className).append("With1Result() {\n").append("        //GIVEN \n")
+		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(");\n")
+		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto);\n")
+		.append("        when(").append(lowerClassName).append("Service.findAll(any()");
+		if (idCompany) {
+			controllerTest.append(", anyInt(), anyInt()");
+		}
+		if (deleteRecord) {
+			controllerTest.append(", any()");
+		}
+		controllerTest.append(")).thenReturn(").append(lowerClassNamePlural).append(");\n")
+			.append("        when(")
+				.append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className)
+				.append("Dtos(any())).thenReturn(").append(lowerClassName).append("Dtos);\n\n").append("        //WHEN \n")
+				.append("        ResponseEntity<List<");
+		if (hasView) {
+			controllerTest.append("Abstract");
+		}			
+		controllerTest.append(className).append("Dto>> response = ")
+				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null");
+		if (deleteRecord) {
+			controllerTest.append(",\"N\"");
+		}
+		if (hasView) {
+			controllerTest.append(", null");
+		}
+		controllerTest.append(");\n\n").append("        //THEN \n")
+		.append("        verify(").append(lowerClassName).append("Service, times(1)).findAll(any()");
+		if (idCompany) {
+			controllerTest.append(", anyInt(), anyInt()");
+		}
+		if (deleteRecord) {
+			controllerTest.append(", any()");
+		}
+		controllerTest.append(");\n")
+		.append("        verify(").append(lowerClassName).append("Mapper, times(1)).").append(lowerClassNamePlural).append("To").append(className).append("Dtos(any());\n")
+		.append("        assertThat(response).usingRecursiveComparison()\n")
+		.append("            .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+		.append("            .isNotNull().isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("Dtos));\n")
+		.append("    }\n\n");
+
+		controllerTest.append("    @Test\n")
+		.append("    void testGetAll").append(className).append("With2Results() {\n").append("        //GIVEN \n")
+		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(",").append(lowerClassName).append("2);\n")
+		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto,").append(lowerClassName).append("Dto2);\n")
+		.append("        when(").append(lowerClassName).append("Service.findAll(any()");
+		if (idCompany) {
+			controllerTest.append(", anyInt(), anyInt()");
+		}
+		if (deleteRecord) {
+			controllerTest.append(", any()");
+		}
+		controllerTest.append(")).thenReturn(").append(lowerClassNamePlural).append(");\n")	
+		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className).append("Dtos(any())).thenReturn(").append(lowerClassName).append("Dtos);\n\n").append("        //WHEN \n")
+		.append("        ResponseEntity<List<");
+		if (hasView) {
+			controllerTest.append("Abstract");
+		}			
+		controllerTest.append(className).append("Dto>> response = ")
+				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null");
+		if (deleteRecord) {
+			controllerTest.append(",\"N\"");
+		}
+		if (hasView) {
+			controllerTest.append(", null");
+		}
+		controllerTest.append(");\n\n").append("        //THEN \n")
+			.append("        verify(").append(lowerClassName).append("Service, times(1)).findAll(any()");
+		if (idCompany) {
+			controllerTest.append(", anyInt(), anyInt()");
+		}
+		if (deleteRecord) {
+			controllerTest.append(", any()");
+		}
+		controllerTest.append(");\n")
+		.append("        verify(").append(lowerClassName).append("Mapper, times(1)).").append(lowerClassNamePlural).append("To").append(className).append("Dtos(any());\n")
+		.append("        assertThat(response).usingRecursiveComparison()\n")
+		.append("            .withComparatorForType(Comparator.comparing(d -> d.truncatedTo(ChronoUnit.MILLIS)), LocalDateTime.class)\n")
+		.append("            .isNotNull().isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("Dtos));\n")
+		.append("    }\n\n");
+
+		controllerTest.append("    @Test\n")
+		.append("    void testGet").append(className).append("ById() {\n").append("        //GIVEN \n")
+		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("To").append(className).append("Dto(any())).thenReturn(").append(lowerClassName).append("Dto);\n")
+		.append("        when(").append(lowerClassName).append("Service.findById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("));\n\n").append("        //WHEN \n")
+		.append("        ResponseEntity<");
+		if (hasView) {
+			controllerTest.append("Abstract");
+		}
+		controllerTest.append(className).append("Dto> response = ")
+		.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(1, 2, 3");
+		if (hasView) {
+			controllerTest.append(", null");
+		}
+		controllerTest.append(");\n\n").append("        //THEN \n")
+		.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
+		.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("Dto));\n")
+		.append("    }\n\n");
+
+		controllerTest.append("    @Test\n")
+		.append("    void testGet").append(className).append("ById_notFound() {\n").append("        //GIVEN \n")
+		.append("        when(").append(lowerClassName).append("Service.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
+		.append("        ResponseEntity<");
+		if (hasView) {
+			controllerTest.append("Abstract");
+		}
+		controllerTest.append(className).append("Dto> response = ")
+		.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(404, 1, 2");
+		if (hasView) {
+			controllerTest.append(", null");
+		}
+		controllerTest.append(");\n\n").append("        //THEN \n")
+		.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.notFound().build());\n")
+		.append("    }\n\n");
+
+		// --- Tests pour la View ---
+		if (hasView) {
+			controllerTest.append("    @Test\n")
+			.append("    void testGetAll").append(className).append("ViewWith1Result() {\n").append("        //GIVEN \n")
+			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View);\n")
+			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
+			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
+			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
+			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null, \"N\", \"full\");\n\n").append("        //THEN \n")
+			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
+			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
+			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
+			.append("    }\n\n");
+
+			controllerTest.append("    @Test\n")
+			.append("    void testGetAll").append(className).append("ViewWith2Results() {\n").append("        //GIVEN \n")
+			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
+			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
+			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
+			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
+			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null, \"N\",\"full\");\n\n").append("        //THEN \n")
+			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
+			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
+			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
+			.append("    }\n\n");
+
+			controllerTest.append("    @Test\n")
+			.append("    void testGet").append(className).append("ViewById() {\n").append("        //GIVEN \n")
+			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewTo").append(className).append("ViewDto(any())).thenReturn(").append(lowerClassName).append("ViewDto);\n")
+			.append("        when(").append(lowerClassName).append("Service.findViewById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("View));\n\n").append("        //WHEN \n")
+			.append("        ResponseEntity<Abstract").append(className).append("Dto> response = ")
+			.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(1, 2, 3, \"full\");\n\n").append("        //THEN \n")
+			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
+			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("ViewDto));\n")
+			.append("    }\n\n");
+
+			controllerTest.append("    @Test\n")
+			.append("    void testGet").append(className).append("ViewById_notFound() {\n").append("        //GIVEN \n")
+			.append("        when(").append(lowerClassName).append("Service.findViewById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
+			.append("        ResponseEntity<Abstract").append(className).append("Dto> response = ")
+			.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(404, 1, 2, \"full\");\n\n").append("        //THEN \n")
+			.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.notFound().build());\n")
+			.append("    }\n\n");
+		}
+
+		controllerTest.append("}\n");
+
+		return controllerTest.toString();
+	}
+
+	private void generateEntityAndDto(String javaClassContent, String javaClassContent2, StringBuilder entity, StringBuilder dto, String className, String entityName, String lowerClassName, String number) {
+		entity.append( "		" + lowerClassName + number + " = new " + entityName + "();\n");
+        dto.append( "		" + lowerClassName + "Dto" + number + " = new " + className + "Dto();\n");
+        
+        // pour remettre les champs de la table dans la vue
+        if (javaClassContent2 != null && !javaClassContent2.isEmpty()) {
+        	try {
+                // Créer une instance de JavaParser
+                JavaParser javaParser = new JavaParser();
+                // Parsing du code Java pour récupérer les propriétés
+                CompilationUnit compilationUnit = javaParser.parse(javaClassContent2).getResult()
+                    .orElseThrow(() -> new ParseException("Invalid Java code"));
+
+                // Parcours des classes dans le fichier
+                compilationUnit.getTypes().forEach(type -> {
+                    if (type instanceof ClassOrInterfaceDeclaration) {
+                        ClassOrInterfaceDeclaration classDecl = (ClassOrInterfaceDeclaration) type;
+                        
+                        // Parcours des champs de la classe
+                        classDecl.getFields().forEach(field -> {       	
+                            // Ignorer "serialVersionUID"
+                            if (!field.getVariables().get(0).getNameAsString().equals("serialVersionUID")) {
+                            	Map<String, String> setter = generateSetter(field, lowerClassName, number);
+                            	entity.append(setter.get("entity"));
+                                dto.append(setter.get("dto"));
+                            }
+                        });
+                    }
+                });
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        try {
+            // Créer une instance de JavaParser
+            JavaParser javaParser = new JavaParser();
+            // Parsing du code Java pour récupérer les propriétés
+            CompilationUnit compilationUnit = javaParser.parse(javaClassContent).getResult()
+                .orElseThrow(() -> new ParseException("Invalid Java code"));
+
+            // Parcours des classes dans le fichier
+            compilationUnit.getTypes().forEach(type -> {
+                if (type instanceof ClassOrInterfaceDeclaration) {
+                    ClassOrInterfaceDeclaration classDecl = (ClassOrInterfaceDeclaration) type;
+                    
+                    // Parcours des champs de la classe
+                    classDecl.getFields().forEach(field -> {       	
+                        // Ignorer "serialVersionUID"
+                        if (!field.getVariables().get(0).getNameAsString().equals("serialVersionUID")) {
+                        	Map<String, String> setter = generateSetter(field, lowerClassName, number);
+                        	entity.append(setter.get("entity"));
+                            dto.append(setter.get("dto"));
+                        }
+                    });
+                }
+            });
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+	} 
+	
+private Map<String, String> generateSetter(FieldDeclaration field, String className, String number) {
+    	
+    	String fieldName = field.getVariables().get(0).getNameAsString();
+    	String capitalizedFieldName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+        String fieldType = field.getElementType().asString();
+        String entity = "";
+        String dto = "";
+        
+        // Vérifier les annotations sur le champ
+        int maxLength = 255;  // Valeur par défaut pour le maxLength
+        int maxDigits = 1;
+        int maxFractionDigits = 1;
+        
+        for (AnnotationExpr annotation : field.getAnnotations()) {
+            if (annotation instanceof NormalAnnotationExpr) {
+                NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
+                String annotationName = normalAnnotation.getNameAsString();
+                // Vérifier l'annotation @Size pour maxLength
+                if ("Size".equals(annotationName)) {
+                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
+                        if ("max".equals(pair.getNameAsString())) {
+                            maxLength = Integer.parseInt(pair.getValue().toString());
+                        }
+                    }
+                }
+                if ("Digits".equals(annotationName)) {
+                    for (MemberValuePair pair : normalAnnotation.getPairs()) {
+                        switch (pair.getNameAsString()) {
+                            case "integer":
+                            	maxDigits = Integer.parseInt(pair.getValue().toString());
+                                break;
+                            case "fraction":
+                                maxFractionDigits = Integer.parseInt(pair.getValue().toString());
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        switch (fieldType) {
+            case "Long":
+            	Long randomLong = ThreadLocalRandom.current().nextLong(0, maxDigits);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
+                break;
+            case "Integer":
+            	Integer randomInt = ThreadLocalRandom.current().nextInt(0, maxDigits);
+            	if (fieldName.equals("id") && number.equals("")) {
+            		randomInt = 8;
+            	}
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomInt + ");\n";
+                break;  
+            case "BigDecimal":
+            	BigDecimal randomBigDecimal = randomBigDecimal(maxDigits, maxFractionDigits);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(new BigDecimal(\"" + randomBigDecimal + "\"));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(new BigDecimal(\"" + randomBigDecimal + "\"));\n";
+                break;
+            case "Double":
+            	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, maxDigits);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomDouble + ");\n";
+                break;
+            case "Float":
+            	Float randomFloat = ThreadLocalRandom.current().nextFloat();
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomFloat + ");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomFloat + ");\n";
+                break; 
+            case "Date":
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(date);\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(localDateTime);\n";
+                break;
+            case "LocalDateTime":
+            	int year = 2025;
+            	if (fieldName.toLowerCase().contains("end")) {
+            		year = 2026;
+            	}
+            	int month = ThreadLocalRandom.current().nextInt(1, 13);
+            	int day = ThreadLocalRandom.current().nextInt(1, 28);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalDateTime.of(" + year + ", " + month + ", " + day + ", 0, 0, 0, 0));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalDateTime.of(" + year + ", " + month + ", " + day + ", 0, 0, 0, 0));\n";
+                break;
+            case "boolean":
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(true);\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(true);\n";
+                break;
+            case "String":
+            	String exemple = generateStringExample(fieldName, maxLength);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(\"" + exemple + "\");\n";
+                break;
+            case "HistoryManagementA":
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(historyManagementA);\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(historyManagementADto);\n";
+                break;
+            default:
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(new " + fieldType + "());\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(new " + fieldType + "Dto());\n";
+                break;
+        }
+        Map<String, String> result = new HashMap<>();
+        result.put("entity", entity);
+        result.put("dto", dto);
+        return result;
+    }
+
+	public static BigDecimal randomBigDecimal(int maxDigits, int maxFractionDigits) {
+		if (maxDigits <= 0) {
+			throw new IllegalArgumentException("maxDigits must be > 0");
+		}
+		if (maxFractionDigits < 0) {
+			throw new IllegalArgumentException("maxFractionDigits must be >= 0");
+		}
+
+		// Génère la partie entière
+		BigDecimal integerPart = BigDecimal
+				.valueOf(random.nextLong(maxDigits == 18 ? Long.MAX_VALUE : (long) Math.pow(10, maxDigits))).abs();
+
+		// Génère la partie fractionnaire
+		BigDecimal fractionPart = BigDecimal.ZERO;
+		if (maxFractionDigits > 0) {
+			long fractionValue = (long) (random.nextDouble() * Math.pow(10, maxFractionDigits));
+			fractionPart = BigDecimal.valueOf(fractionValue).divide(BigDecimal.TEN.pow(maxFractionDigits),
+					maxFractionDigits, RoundingMode.DOWN);
+		}
+
+		return integerPart.add(fractionPart);
+	}
+	
 	public String extractClassProperties(String javaClassContent) {
 		StringBuilder properties = new StringBuilder();
 
@@ -789,6 +1558,10 @@ public class JavaClassGeneratorService {
 			swaggerProperty += "          type: boolean\n          description: " + description
 					+ "\n          example: true\n";
 			break;
+		case "Boolean":
+			swaggerProperty += "          type: boolean\n          description: " + description
+					+ "\n          example: true\n";
+			break;
 		case "String":
 			swaggerProperty += "          type: string\n          maxLength: " + maxLength + "\n          description: "
 					+ description + "\n          example: \"" + generateStringExample(fieldName, maxLength) + "\"\n";
@@ -894,5 +1667,25 @@ public class JavaClassGeneratorService {
 			// Ajouter "s" par défaut
 			return className + "s";
 		}
+	}
+	
+
+	private String getHistoryManagement() {
+		return "		LocalDateTime localDateTime = LocalDateTime.now();\r\n"
+        		+ "		ZoneId zoneId = ZoneId.of(\"UTC\");\r\n"
+        		+ "		ZonedDateTime zonedDateTime = localDateTime.atZone(zoneId);\r\n"
+        		+ "		Date date = Date.from(zonedDateTime.toInstant());			\r\n"
+        		+ "\r\n"
+        		+ "		HistoryManagementA historyManagementA = new HistoryManagementA();\r\n"
+        		+ "		historyManagementA.setCreationDate(date);\r\n"
+        		+ "		historyManagementA.setCreationTime(date);\r\n"
+        		+ "		historyManagementA.setProgramCreation(\"ProgramA\");\r\n"
+        		+ "		historyManagementA.setUserCreation(\"UserA\");\r\n"
+        		+ "\r\n"
+        		+ "		HistoryManagementADto historyManagementADto = new HistoryManagementADto();\r\n"
+        		+ "		historyManagementADto.setCreationDate(localDateTime);\r\n"
+        		+ "		historyManagementADto.setCreationTime(localDateTime);\r\n"
+        		+ "		historyManagementADto.setProgramCreation(\"ProgramA\");\r\n"
+        		+ "		historyManagementADto.setUserCreation(\"UserA\");\r\n";
 	}
 }

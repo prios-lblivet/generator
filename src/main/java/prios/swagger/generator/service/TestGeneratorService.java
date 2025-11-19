@@ -59,7 +59,7 @@ public class TestGeneratorService {
             response.put("mapperView", generateMapper(entityView.toString(), dtoView.toString(), className + "View", packageName));
         }
 
-        response.put("service", generateServiceTest(entity, dto, hasView, entityView, dtoView, className, packageName));
+        response.put("service", generateServiceTest(entity, hasView, entityView, className, packageName));
         response.put("controller", generateControllerTest(entity, dto, hasView, entityView, dtoView, className, packageName));
         
         return response;
@@ -226,7 +226,7 @@ public class TestGeneratorService {
             case "BigDecimal":
             	BigDecimal randomBigDecimal = randomBigDecimal(maxDigits, maxFractionDigits);
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(new BigDecimal(\"" + randomBigDecimal + "\"));\n";
-            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomBigDecimal + ");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(new BigDecimal(\"" + randomBigDecimal + "\"));\n";
                 break;
             case "Double":
             	Double randomDouble = ThreadLocalRandom.current().nextDouble(1.0, maxDigits);
@@ -330,6 +330,7 @@ public class TestGeneratorService {
 				+ "\r\n"
 				+ "import static org.assertj.core.api.Assertions.assertThat;\r\n"
 				+ "\r\n"
+				+ "import java.math.BigDecimal;\r\n"
 				+ "import java.time.LocalDateTime;\r\n"
 				+ "import java.time.ZoneId;\r\n"
 				+ "import java.time.ZonedDateTime;\r\n"
@@ -522,8 +523,8 @@ public class TestGeneratorService {
         		+ "		historyManagementADto.setUserCreation(\"UserA\");\r\n";
 	}
 	
-	private String generateServiceTest(StringBuilder entity, StringBuilder dto, boolean hasView,
-			StringBuilder entityView, StringBuilder dtoView,
+	private String generateServiceTest(StringBuilder entity, boolean hasView,
+			StringBuilder entityView,
 			String className, String packageName) {
 
 		String lowerClassName = className.substring(0, 1).toLowerCase() + className.substring(1);
@@ -549,6 +550,7 @@ public class TestGeneratorService {
 		.append("import static org.mockito.Mockito.times;\n")
 		.append("import static org.mockito.Mockito.verify;\n")
 		.append("import static org.mockito.Mockito.when;\n\n")
+		.append("import java.math.BigDecimal;\n")
 		.append("import java.time.LocalDateTime;\n")
 		.append("import java.time.ZoneId;\n")
 		.append("import java.time.ZonedDateTime;\n")
@@ -605,15 +607,11 @@ public class TestGeneratorService {
 		.append("    void setUp() {\n")
 		.append(getHistoryManagement())
 		.append(System.lineSeparator())
-		.append(entity)
-		.append(System.lineSeparator())
-		.append(dto);
+		.append(entity);
 
 		if (hasView) {
 			serviceTest.append(System.lineSeparator())
 			.append(entityView)
-			.append(System.lineSeparator())
-			.append(dtoView)
 			.append(System.lineSeparator());
 		}
 
@@ -693,6 +691,7 @@ public class TestGeneratorService {
 		.append("import static org.mockito.Mockito.times;\n")
 		.append("import static org.mockito.Mockito.verify;\n")
 		.append("import static org.mockito.Mockito.when;\n\n")
+		.append("import java.math.BigDecimal;\n")
 		.append("import java.time.LocalDateTime;\n")
 		.append("import java.time.ZoneId;\n")
 		.append("import java.time.ZonedDateTime;\n")
@@ -781,12 +780,13 @@ public class TestGeneratorService {
 		// --- Tests getAll ---
 		controllerTest.append("    @Test\n")
 		.append("    void testGetAll").append(className).append("With1Result() {\n")
-		.append("        List<").append(entityName).append("> entities = List.of(").append(lowerClassName).append(");\n")
-		.append("        List<").append(dtoName).append("> dtos = List.of(").append(lowerClassName).append("Dto);\n")
+		.append("        List<").append(entityName).append("> ").append(lowerClassName).append("s = List.of(").append(lowerClassName).append(");\n")
+		.append("        List<").append(dtoName).append("> ").append(lowerClassName).append("dtos = List.of(").append(lowerClassName).append("Dto);\n")
 		.append("        when(").append(lowerClassName).append("Service.findAll(any(), anyInt(), anyInt(), any())).thenReturn(entities);\n")
-		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("sTo").append(className).append("Dtos(any())).thenReturn(dtos);\n")
+		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("sTo").append(className).append("Dtos(any())).thenReturn(").append(lowerClassName).append("dtos);\n")
 		.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
 		.append(lowerClassName).append("ControllerRest.getAll").append(className).append("(1, 2, null, \"N\", null);\n")
+		.append("        verify(").append(lowerClassName).append("Service, times(1)).findAll").append(className).append("(any(), anyInt(), anyInt(), any());\n")
 		.append("        verify(").append(lowerClassName).append("Mapper, times(1)).").append(lowerClassName).append("sTo").append(className).append("Dtos(any());\n")
 		.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 		.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(dtos));\n")
@@ -794,10 +794,10 @@ public class TestGeneratorService {
 
 		controllerTest.append("    @Test\n")
 		.append("    void testGetAll").append(className).append("With2Results() {\n")
-		.append("        List<").append(entityName).append("> entities = List.of(").append(lowerClassName).append(",").append(lowerClassName).append("2);\n")
-		.append("        List<").append(dtoName).append("> dtos = List.of(").append(lowerClassName).append("Dto,").append(lowerClassName).append("Dto2);\n")
-		.append("        when(").append(lowerClassName).append("Service.findAll(any(), anyInt(), anyInt(), any())).thenReturn(entities);\n")
-		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("sTo").append(className).append("Dtos(any())).thenReturn(dtos);\n")
+		.append("        List<").append(entityName).append("> ").append(lowerClassName).append("s = List.of(").append(lowerClassName).append(",").append(lowerClassName).append("2);\n")
+		.append("        List<").append(dtoName).append("> ").append(lowerClassName).append("dtos = List.of(").append(lowerClassName).append("Dto,").append(lowerClassName).append("Dto2);\n")
+		.append("        when(").append(lowerClassName).append("Service.findAll(any(), anyInt(), anyInt(), any())).thenReturn(").append(lowerClassName).append("s);\n")
+		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("sTo").append(className).append("Dtos(any())).thenReturn(").append(lowerClassName).append(lowerClassName).append("dtos);\n")
 		.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
 		.append(lowerClassName).append("ControllerRest.getAll").append(className).append("(1, 2, null, \"N\", null);\n")
 		.append("        verify(").append(lowerClassName).append("Mapper, times(1)).").append(lowerClassName).append("sTo").append(className).append("Dtos(any());\n")

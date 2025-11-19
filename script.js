@@ -369,11 +369,15 @@ function generateJavaClass() {
 	        .then(data => {
 	            // Afficher l'entité dans le textarea
 	            console.log(data);
-	            document.getElementById("generatedJavaClassMapper").textContent = data.mapper; 
-	            document.getElementById("generatedJavaClassMapperView").textContent = data.mapperView; 
+				document.getElementById("generatedJavaClassMapper").textContent = data.mapper; 
+				document.getElementById("generatedJavaClassMapperTest").textContent = data.mapperTest; 
+				document.getElementById("generatedJavaClassMapperView").textContent = data.mapperView; 
+				document.getElementById("generatedJavaClassMapperViewTest").textContent = data.mapperViewTest; 
 	            document.getElementById("generatedJavaClassService").textContent = data.service; 
-	            document.getElementById("generatedJavaClassServiceImpl").textContent = data.serviceImpl; 
-	            document.getElementById("generatedJavaClassController").textContent = data.controller; 
+				document.getElementById("generatedJavaClassServiceImpl").textContent = data.serviceImpl; 
+				document.getElementById("generatedJavaClassServiceImplTest").textContent = data.serviceImplTest; 
+				document.getElementById("generatedJavaClassController").textContent = data.controller; 
+				document.getElementById("generatedJavaClassControllerTest").textContent = data.controllerTest; 
 	            document.getElementById("generatedJavaClassSwagger").textContent = data.swagger; 
 	            Prism.highlightAll();
 	            

@@ -324,7 +324,16 @@
 		#dropZone.dragover {
 			background-color: #d3e3fd;
 		}
-
+		
+		.code-block-container {
+		  position: relative;
+		  flex: 1;
+		  min-height: 20vh;
+		  max-height: 60vh;
+		  overflow-x: auto;
+		  overflow-y: auto;
+		}
+		
 		.copy-btn {
 			position: absolute;
 			top: 18px;
@@ -565,25 +574,57 @@
 							<p id="statusJavaClassImport"></p>
 						</div>
 					</div>
-					<div id="javaClass_mapper" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapper', this)">Copier</button>
-						<pre><code id="generatedJavaClassMapper" class="code-block language-java">En attente de la génération du mapper...</code></pre>
+					<div id="javaClass_mapper" class="tab-content">					
+						<div class="code-container" style="display: flex; gap: 20px;">		
+					    	<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapper', this)">Copier</button>
+								<pre><code id="generatedJavaClassMapper" class="code-block language-java">En attente de la génération du mapper...</code></pre>
+							</div>
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperTest', this)">Copier</button>
+								<pre><code id="generatedJavaClassMapperTest" class="code-block language-java">En attente de la génération du test...</code></pre>
+							</div>
+						</div>
 					</div>
 					<div id="javaClass_mapper_view" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperView', this)">Copier</button>
-						<pre><code id="generatedJavaClassMapperView" class="code-block language-java">En attente de la génération du mapper view...</code></pre>
+						<div class="code-container" style="display: flex; gap: 20px;">
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperView', this)">Copier</button>
+								<pre><code id="generatedJavaClassMapperView" class="code-block language-java">En attente de la génération du mapper vue...</code></pre>
+							</div>						
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperViewTest', this)">Copier</button>
+								<pre><code id="generatedJavaClassMapperViewTest" class="code-block language-java">En attente de la génération du test...</code></pre>
+							</div>
+						</div>
 					</div>
 					<div id="javaClass_service" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassService', this)">Copier</button>
 						<pre><code id="generatedJavaClassService" class="code-block language-java">En attente de la génération du service...</code></pre>
 					</div>
 					<div id="javaClass_serviceImpl" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImpl', this)">Copier</button>
-						<pre><code id="generatedJavaClassServiceImpl" class="code-block language-java">En attente de la génération du serviceImpl...</code></pre>
+						<div class="code-container" style="display: flex; gap: 20px;">
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImpl', this)">Copier</button>
+								<pre><code id="generatedJavaClassServiceImpl" class="code-block language-java">En attente de la génération du serviceImpl...</code></pre>
+							</div>
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImplTest', this)">Copier</button>
+								<pre><code id="generatedJavaClassServiceImplTest" class="code-block language-java">En attente de la génération du test...</code></pre>
+							</div>
+						</div>
 					</div>
 					<div id="javaClass_controller" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassController', this)">Copier</button>
-						<pre><code id="generatedJavaClassController" class="code-block language-java">En attente de la génération du controller...</code></pre>
+						<div class="code-container" style="display: flex; gap: 20px;">
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassController', this)">Copier</button>
+								<pre><code id="generatedJavaClassController" class="code-block language-java">En attente de la génération du controller...</code></pre>
+							</div>
+							<div class="code-block-container">
+								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassControllerTest', this)">Copier</button>
+								<pre><code id="generatedJavaClassControllerTest" class="code-block language-java">En attente de la génération du test...</code></pre>
+							</div>
+						</div>
 					</div>
 					<div id="javaClass_swagger" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassSwagger', this)">Copier</button>
