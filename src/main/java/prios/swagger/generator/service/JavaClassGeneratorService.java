@@ -67,6 +67,7 @@ public class JavaClassGeneratorService {
 					lowerClassName + "Views", className + "View", entityView.toString(), dtoView.toString()));
 
 		}
+		response.put("repository", generateRepository(api, classNameImport, className));
 		response.put("service", generateService(api, classNameImport, className, lowerClassName, lowerClassNamePlural,
 				entityName, hasView, deleteRecord, idCompany));
 		response.put("serviceImpl",
@@ -93,24 +94,31 @@ public class JavaClassGeneratorService {
                 if (type instanceof ClassOrInterfaceDeclaration) {
                     ClassOrInterfaceDeclaration classDecl = (ClassOrInterfaceDeclaration) type;
 
-                    // Parcours des annotations sur la classe
-                    for (AnnotationExpr annotation : classDecl.getAnnotations()) {
-                        if (annotation instanceof NormalAnnotationExpr) {
-                            NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
+                    if (classDecl.getJavadoc().isPresent()) {
+                        Javadoc javadoc = classDecl.getJavadoc().get();
+                        tabInfo[0] = className;
+                        tabInfo[1] = javadoc.getDescription().toText(); // uniquement le texte descriptif
+                    } else {                    	
+						// Parcours des annotations sur la classe
+						for (AnnotationExpr annotation : classDecl.getAnnotations()) {
+							if (annotation instanceof NormalAnnotationExpr) {
+								NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
 
-                            // Vérifier l'annotation @ApiObject pour récupérer le nom et la description
-                            if ("ApiObject".equals(normalAnnotation.getNameAsString())) {
-                                for (MemberValuePair pair : normalAnnotation.getPairs()) {
-                                    if ("name".equals(pair.getNameAsString())) {
-                                    	tabInfo[0] = pair.getValue().toString().replace("\"", "");  // Stocker dans le tableau
-                                    }
-                                    if ("description".equals(pair.getNameAsString())) {
-                                    	tabInfo[1] = pair.getValue().toString().replace("\"", "").replace(":", "");  // Stocker dans le tableau
-                                    }
-                                }
-                            }
-                        }
-                    }
+								// Vérifier l'annotation @ApiObject pour récupérer le nom et la description
+								if ("ApiObject".equals(normalAnnotation.getNameAsString())) {
+									for (MemberValuePair pair : normalAnnotation.getPairs()) {
+										if ("name".equals(pair.getNameAsString())) {
+											tabInfo[0] = pair.getValue().toString().replace("\"", ""); // Stocker dans
+																										// le tableau
+										}
+										if ("description".equals(pair.getNameAsString())) {
+											tabInfo[1] = pair.getValue().toString().replace("\"", "").replace(":", "");
+										}
+									}
+								}
+							}
+						}
+					}
                 }
             });
         } catch (ParseException e) {
@@ -229,6 +237,30 @@ public class JavaClassGeneratorService {
 		mapperBuilder.append("}\n");
 		return mapperBuilder.toString();
 	}
+	
+	public String generateRepository(String api, String classNameImport, String className) {
+
+		StringBuilder repositoryBuilder = new StringBuilder();
+
+		// ✅ Package
+		repositoryBuilder.append("package com.prios.api.a.").append(api).append(".repository.").append(classNameImport)
+				.append(";\n\n");
+
+		// ✅ Imports
+		repositoryBuilder.append("import org.springframework.data.jpa.repository.JpaRepository;\n")
+				.append("import org.springframework.data.jpa.repository.JpaSpecificationExecutor;\n\n");
+
+		repositoryBuilder.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport)
+				.append(".").append(className).append("Table;\n\n");
+
+		// ✅ Déclaration interface
+		repositoryBuilder.append("public interface ").append(className).append("Repository extends JpaRepository<")
+				.append(className).append("Table, Integer>, JpaSpecificationExecutor<").append(className).append("Table> {\n");
+
+		repositoryBuilder.append("}");
+
+		return repositoryBuilder.toString();
+	}
 
 	public String generateService(String api, String classNameImport, String className, String lowerClassName,
 			String lowerClassNamePlural, String entityName, boolean hasView, boolean deleteRecord, boolean idCompany) {
@@ -257,22 +289,28 @@ public class JavaClassGeneratorService {
 
 		// ✅ findAll
 		serviceBuilder.append("    List<").append(className)
-				.append("Table> findAll(final List<SearchCriteria> requestParams,");
+				.append("Table> findAll(final List<SearchCriteria> requestParams");
 
 		if (idCompany) {
-			serviceBuilder.append("final int idCompany,");
+			serviceBuilder.append(", final int idCompany, final int idEstablishment");
+		}
+		if (deleteRecord) {
+			serviceBuilder.append(", final String deleteRecord");
 		}
 
-		serviceBuilder.append("final int idEstablishment,final String deleteRecord);\n\n");
+		serviceBuilder.append(");\n\n");
 
 		// ✅ findAllView si hasView
 		if (hasView) {
 			serviceBuilder.append("    List<").append(className)
-					.append("View> findAllView(final List<SearchCriteria> requestParams,");
+					.append("View> findAllView(final List<SearchCriteria> requestParams");
 			if (idCompany) {
-				serviceBuilder.append("final int idCompany,");
+				serviceBuilder.append(", final int idCompany, final int idEstablishment");
 			}
-			serviceBuilder.append("final int idEstablishment,final String deleteRecord);\n\n");
+			if (deleteRecord) {
+				serviceBuilder.append(", final String deleteRecord");
+			}
+			serviceBuilder.append(");\n\n");
 		}
 
 		// ✅ findById
@@ -388,17 +426,22 @@ public class JavaClassGeneratorService {
 		// ✅ findAllView (si hasView)
 		if (hasView) {
 			serviceImplBuilder.append("    @Override\n").append("    public List<").append(className)
-					.append("View> findAllView(List<SearchCriteria> requestParams, int idCompany,\n")
-					.append("            int idEstablishment, String deleteRecord) throws ResponseStatusException {\n")
-					.append("        PriosParams params = new PriosParams(");
+					.append("View> findAllView(List<SearchCriteria> requestParams");
+			if (idCompany) {
+				serviceImplBuilder.append(", int idCompany,\n, int idEstablishment");
+			}
+			if (deleteRecord) {
+				serviceImplBuilder.append(", String deleteRecord");
+			}
+			serviceImplBuilder.append(") { \n").append("        PriosParams params = new PriosParams(");
 			if (idCompany) {
 				serviceImplBuilder.append("idCompany,idEstablishment,");
 			}
 			serviceImplBuilder.append("requestParams");
 			if (deleteRecord) {
-				serviceImplBuilder.append(",deleteRecord);\n");
+				serviceImplBuilder.append(",deleteRecord");
 			}
-			serviceImplBuilder.append("        return ").append(lowerClassName)
+			serviceImplBuilder.append(");\n        return ").append(lowerClassName)
 					.append("ViewRepository.findAll(view(params));\n").append("    }\n\n");
 		}
 
@@ -483,17 +526,15 @@ public class JavaClassGeneratorService {
 			controllerBuilder.append("Abstract");
 		}
 		controllerBuilder.append(className).append("Dto>> getAll").append(classNamePlural).append("(");
-
-		if (idCompany) {
-			controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment, ");
-		}
-		controllerBuilder.append("@Valid Map<String, Object> criteriaParam");
+		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
+	
 		if (hasView) {
 			controllerBuilder.append(", @Valid String detail");
 		}
 		if (deleteRecord) {
 			controllerBuilder.append(", @Valid String deleteRecord");
 		}
+		controllerBuilder.append(" ,@Valid Map<String, Object> criteriaParam");
 		controllerBuilder.append(") {\n");
 
 		if (hasView) {
@@ -502,9 +543,10 @@ public class JavaClassGeneratorService {
 					.append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo")
 					.append(className).append("ViewDtos(\n").append("                    ").append(lowerClassName)
 					.append("Service.findAllView(SearchUtils.getRequestParams(this, MethodUtils.getMethodName(), criteriaParam)");
-			if (idCompany)
-				controllerBuilder.append(", idCompany");
-			controllerBuilder.append(", idEstablishment");
+			if (idCompany) {
+				controllerBuilder.append(", idCompany, idEstablishment");
+			}
+				
 			if (deleteRecord)
 				controllerBuilder.append(", deleteRecord");
 			controllerBuilder.append("))));\n").append("        }\n");
@@ -515,8 +557,7 @@ public class JavaClassGeneratorService {
 				.append("Dtos(\n").append("                ").append(lowerClassName)
 				.append("Service.findAll(SearchUtils.getRequestParams(this, MethodUtils.getMethodName(), criteriaParam)");
 		if (idCompany)
-			controllerBuilder.append(", idCompany");
-		controllerBuilder.append(", idEstablishment");
+			controllerBuilder.append(", idCompany, idEstablishment");
 		if (deleteRecord)
 			controllerBuilder.append(", deleteRecord");
 		controllerBuilder.append("))));\n");
@@ -529,8 +570,7 @@ public class JavaClassGeneratorService {
 			controllerBuilder.append("Abstract");
 		}
 		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(Integer id, ");
-		if (idCompany)
-			controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
+		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
 		if (hasView)
 			controllerBuilder.append(", @Valid String detail");
 		controllerBuilder.append(") {\n");
@@ -546,12 +586,11 @@ public class JavaClassGeneratorService {
 
 		controllerBuilder.append("        return ").append(lowerClassName).append("Service.findById(id)\n")
 				.append("            .map(").append(lowerClassName).append("Mapper::").append(lowerClassName)
-				.append("To").append(className).append("Dto)\n").append("            .map(");
+				.append("To").append(className).append("Dto)\n");
 		if (hasView) {
-			controllerBuilder.append("Abstract");
+			controllerBuilder.append("            .map(Abstract").append(className).append("Dto.class::cast)\n");
 		}
-		controllerBuilder.append(className).append("Dto.class::cast)\n")
-				.append("            .map(ResponseEntity::ok)\n")
+		controllerBuilder.append("            .map(ResponseEntity::ok)\n")
 				.append("            .orElse(ResponseEntity.notFound().build());\n");
 		controllerBuilder.append("    }\n");
 
@@ -580,15 +619,6 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("      tags:\n");
 		swaggerBuilder.append("        - ").append(className).append("\n");
 		swaggerBuilder.append("      parameters:\n");
-		swaggerBuilder.append("        - name: criteriaParam\n");
-		swaggerBuilder.append("          in: query\n");
-		swaggerBuilder.append("          description: \"Paramètres dynamiques sous forme de clé=valeur\"\n");
-		swaggerBuilder.append("          required: false\n");
-		swaggerBuilder.append("          style: form\n");
-		swaggerBuilder.append("          explode: true\n");
-		swaggerBuilder.append("          schema:\n");
-		swaggerBuilder.append("            type: object\n");
-		swaggerBuilder.append("            additionalProperties: true\n");
 		swaggerBuilder.append("        - name: idCompany\n");
 		swaggerBuilder.append("          in: header\n");
 		swaggerBuilder.append("          required: true\n");
@@ -615,6 +645,15 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("          schema:\n");
 			swaggerBuilder.append("            type: string\n");
 		}
+		swaggerBuilder.append("        - name: criteriaParam\n");
+		swaggerBuilder.append("          in: query\n");
+		swaggerBuilder.append("          description: \"Paramètres dynamiques sous forme de clé=valeur\"\n");
+		swaggerBuilder.append("          required: false\n");
+		swaggerBuilder.append("          style: form\n");
+		swaggerBuilder.append("          explode: true\n");
+		swaggerBuilder.append("          schema:\n");
+		swaggerBuilder.append("            type: object\n");
+		swaggerBuilder.append("            additionalProperties: true\n");
 		swaggerBuilder.append("      responses:\n");
 		swaggerBuilder.append("        \"200\":\n");
 		swaggerBuilder.append("          description: Liste des ").append(classNamePlural)
@@ -872,13 +911,10 @@ public class JavaClassGeneratorService {
 		}
 
 		serviceTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(entityName).append(";\n")
-		.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n")
-		.append("import com.prios.core.a.shared.dto.common.HistoryManagementADto;\n")
-		.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n");
+		.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n");
 
 		if (hasView) {
-			serviceTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n")
-			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n");
+			serviceTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n");
 		}
 
 		serviceTest.append("\n@ExtendWith(MockitoExtension.class)\n")
@@ -894,15 +930,11 @@ public class JavaClassGeneratorService {
 		}
 
 		serviceTest.append("    ").append(entityName).append(" ").append(lowerClassName).append(";\n")
-		.append("    ").append(entityName).append(" ").append(lowerClassName).append("2;\n")
-		.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto;\n")
-		.append("    ").append(className).append("Dto ").append(lowerClassName).append("Dto2;\n\n");
+		.append("    ").append(entityName).append(" ").append(lowerClassName).append("2;\n");
 
 		if (hasView) {
 			serviceTest.append("    ").append(className).append("View ").append(lowerClassName).append("View;\n")
-			.append("    ").append(className).append("View ").append(lowerClassName).append("View2;\n")
-			.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto;\n")
-			.append("    ").append(className).append("ViewDto ").append(lowerClassName).append("ViewDto2;\n\n");
+			.append("    ").append(className).append("View ").append(lowerClassName).append("View2;\n");
 		}
 
 		// --- setUp() ---
@@ -1078,14 +1110,14 @@ public class JavaClassGeneratorService {
 			controllerTest.append("Abstract");
 		}			
 		controllerTest.append(className).append("Dto>> response = ")
-				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null");
+				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
 		if (deleteRecord) {
 			controllerTest.append(",\"N\"");
 		}
 		if (hasView) {
 			controllerTest.append(", null");
 		}
-		controllerTest.append(");\n\n").append("        //THEN \n")
+		controllerTest.append(", null);\n\n").append("        //THEN \n")
 		.append("        verify(").append(lowerClassName).append("Service, times(1)).findAll(any()");
 		if (idCompany) {
 			controllerTest.append(", anyInt(), anyInt()");
@@ -1118,14 +1150,14 @@ public class JavaClassGeneratorService {
 			controllerTest.append("Abstract");
 		}			
 		controllerTest.append(className).append("Dto>> response = ")
-				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null");
+				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
 		if (deleteRecord) {
 			controllerTest.append(",\"N\"");
 		}
 		if (hasView) {
 			controllerTest.append(", null");
 		}
-		controllerTest.append(");\n\n").append("        //THEN \n")
+		controllerTest.append(", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("Service, times(1)).findAll(any()");
 		if (idCompany) {
 			controllerTest.append(", anyInt(), anyInt()");
@@ -1183,7 +1215,7 @@ public class JavaClassGeneratorService {
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null, \"N\", \"full\");\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, \"N\", \"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
@@ -1196,7 +1228,7 @@ public class JavaClassGeneratorService {
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, null, \"N\",\"full\");\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, \"N\",\"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
@@ -1527,22 +1559,29 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 					+ "\n";
 			break;
 		case "Integer":
+			Integer randomInt = ThreadLocalRandom.current().nextInt(0, maxInteger.intValue());
+			String exampleInt = randomInt.toString();
+			if (fieldName.toLowerCase().contains("month")) {
+				exampleInt = "12";
+			}if (fieldName.toLowerCase().contains("year")) {
+				exampleInt = "2025";
+			}
 			swaggerProperty += "          type: integer\n          format: int32\n          description: " + description
-					+ "\n          example: 100\n          maximum: " + maximum + "\n          minimum: " + minimum
+					+ "\n          example: " + exampleInt + "\n          maximum: " + maximum + "\n          minimum: " + minimum
 					+ "\n";
 			break;
 		case "Double":
-			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+			swaggerProperty += "          type: number\n          description: " + description
 					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
 					+ "\n          multipleOf: " + multipleOf + "\n";
 			break;
 		case "Float":
-			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+			swaggerProperty += "          type: number\n          description: " + description
 					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
 					+ "\n          multipleOf: " + multipleOf + "\n";
 			break;
 		case "BigDecimal":
-			swaggerProperty += "          type: number\n          format: bigdecimal\n          description: " + description
+			swaggerProperty += "          type: number\n          description: " + description
 					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
 					+ "\n          multipleOf: " + multipleOf + "\n";
 			break;

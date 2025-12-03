@@ -28,6 +28,7 @@ public class JavaGeneratorService {
 
 	    classCode.append("import java.io.Serializable;\n");
 	    classCode.append("import javax.persistence.Convert;\n");
+	    classCode.append("import javax.persistence.Column;\n");
 	    classCode.append("import javax.persistence.Embedded;\n");
 	    classCode.append("import javax.persistence.GeneratedValue;\n");
 	    classCode.append("import javax.persistence.Id;\n");
@@ -37,12 +38,19 @@ public class JavaGeneratorService {
 	    classCode.append("import javax.validation.Valid;\n");
 	    classCode.append("import javax.validation.constraints.Digits;\n");
 	    classCode.append("import javax.validation.constraints.Size;\n");
+	    classCode.append("import java.time.LocalDateTime;\n");
+	    classCode.append("import java.math.BigDecimal;\n");
 	    classCode.append("import org.hibernate.annotations.GenericGenerator;\n");
 	    classCode.append("import org.hibernate.annotations.Type;\n");
 	    classCode.append("import org.hibernate.annotations.TypeDef;\n");
 	    classCode.append("import com.prios.core.a.common.history.management.HistoryManagementA;\n");
 	    classCode.append("import com.prios.tools.config.data.IdConverter;\n");
+	    classCode.append("import com.prios.tools.config.data.StringConverter;\n");
+	    classCode.append("import com.prios.tools.config.data.LocalDateTimeConverter;\n");
+	    classCode.append("import com.prios.tools.config.data.LocalTimeConverter;\n");
+	    classCode.append("import com.prios.tools.config.data.LongConverter;\n");
 	    classCode.append("import com.prios.tools.config.data.OuiNonType;\n");
+	    classCode.append("import com.prios.core.a.util.BigDecimalConverter;\n");
 	    classCode.append("import lombok.Getter;\n");
 	    classCode.append("import lombok.Setter;\n\n");
 
@@ -95,35 +103,50 @@ public class JavaGeneratorService {
 	        
 	        // Si Lng et Digit sont à 1, c'est un boolean /!\ réctification ça peu aussi être un string de 1 caratère
 	        else if ("1".equals(lng) && "1".equals(digit)) {
-	        	if (description.toLowerCase().contains("(oui/non)") || description.toLowerCase().contains("(o/n)") ) {
+	        	if (description.toLowerCase().contains("(ui/non") || description.toLowerCase().contains("o/n") ) {
 	        		classCode.append("\t@Type(type = \"ouiNonType\")\n");
 		            classCode.append("\tprivate boolean ").append(nomVariable).append(";\n\n");
 	        	} else {
 		            classCode.append("\t@Size(max = ").append(lng).append(")\n");
+		            classCode.append("\t@Convert(converter = StringConverter.class)\n");		            
 		            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
 	        	}	            
 	        }
+	        // Si Lng et Digit sont à 8 et que le champs contient le nom date c'est une heure
+	        else if ("8".equals(lng) && "8".equals(digit) && nomVariable.toLowerCase().contains("date")) {
+	        	classCode.append("\t@Convert(converter = LocalDateTimeConverter.class)\n");
+		        classCode.append("\tprivate LocalDateTime ").append(nomVariable).append(";\n\n");
+	        	            
+	        }
 	        // Si Lng et Digit sont à 8 et que le champs contient le nom date c'est une date
-	        else if ("8".equals(lng) && "8".equals(digit) && nomVariable.contains("Date")) {
-	        	classCode.append("\t@Convert(converter = DateConverter.class)\n");
-		        classCode.append("\tprivate Date ").append(nomVariable).append(";\n\n");
+	        else if ("6".equals(lng) && "6".equals(digit) && nomVariable.toLowerCase().contains("time")) {
+	        	classCode.append("\t@Convert(converter = LocalTimeConverter.class)\n");
+		        classCode.append("\tprivate LocalDateTime ").append(nomVariable).append(";\n\n");
 	        	            
 	        }
 	        // Si "Dec" est vide, c'est un String
 	        else if (dec == null || dec.isEmpty() || dec.equals("")) {
 	            classCode.append("\t@Size(max = ").append(lng).append(")\n");
+	            classCode.append("\t@Convert(converter = StringConverter.class)\n");	
 	            classCode.append("\tprivate String ").append(nomVariable).append(";\n\n");
 	        }
 	        // Si "Dec" est "0"
 	        else if (dec.equals("0")) {
 	            // Si Lng <= 9, c'est un Integer, sinon c'est un long
 	            if (Integer.parseInt(lng) <= 9) {
-	            	if (nomVariable.equals("id"))
+	            	if (nomVariable.equals("id")) {
 			            classCode.append("\t@Id\n");
+			            classCode.append("\t@GenericGenerator(name = \"generator\", strategy = \"com.prios.tools.config.data.IncrementGenerator\")\n");
+			            classCode.append("\t@GeneratedValue(generator = \"generator\")\n");
+	            		
+	            	} else {
+			            classCode.append("\t@Convert(converter = IdConverter.class)\n");	
+	            	}
 		            classCode.append("\t@Digits(integer = ").append(lng).append(", fraction = 0)\n");
 		            classCode.append("\tprivate Integer ").append(nomVariable).append(";\n\n");
 	            } else {
 		            classCode.append("\t@Digits(integer = ").append(lng).append(", fraction = 0)\n");
+		            classCode.append("\t@Convert(converter = LongConverter.class)\n");	
 		            classCode.append("\tprivate Long ").append(nomVariable).append(";\n\n");
 	            }
 	        }
@@ -132,8 +155,10 @@ public class JavaGeneratorService {
 	            // Si Lng <= 9, c'est un Double, sinon c'est un Float
 	        	Integer decInt = Integer.parseInt(dec);
 		        Integer digitInt = Integer.parseInt(digit);
-		            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
-		            classCode.append("\tprivate Double ").append(nomVariable).append(";\n\n");	            
+	            classCode.append("\t@Digits(integer = ").append(digitInt - decInt).append(", fraction = ").append(dec).append(")\n");
+	            classCode.append("\t@Column(precision = ").append(digitInt).append(", scale = ").append(dec).append(")\n");
+		            classCode.append("\t@Convert(converter = BigDecimalConverter.class)\n");	
+		            classCode.append("\tprivate BigDecimal ").append(nomVariable).append(";\n\n");	            
 	        }
 	    }	    
 

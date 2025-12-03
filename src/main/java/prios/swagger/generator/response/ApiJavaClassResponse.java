@@ -6,6 +6,7 @@ public class ApiJavaClassResponse {
 	private String mapperTest;
     private String mapperView;
     private String mapperViewTest;
+    private String repository;
     private String service;
     private String serviceImpl;
     private String serviceImplTest;
@@ -13,12 +14,13 @@ public class ApiJavaClassResponse {
     private String controllerTest;
     private String swagger;
 
-	public ApiJavaClassResponse(String mapper, String mapperTest, String mapperView, String mapperViewTest, String service,
+	public ApiJavaClassResponse(String mapper, String mapperTest, String mapperView, String mapperViewTest, String repository, String service,
 			String serviceImpl, String serviceImplTest, String controller, String controllerTest, String swagger) {
 		this.mapper = mapper;
 		this.mapperTest = mapperTest;
 		this.mapperView = mapperView;
 		this.mapperViewTest = mapperViewTest;
+		this.setRepository(repository);
 		this.service = service;
 		this.serviceImpl = serviceImpl;
 		this.serviceImplTest = serviceImplTest;
@@ -74,7 +76,14 @@ public class ApiJavaClassResponse {
 	public void setSwagger(String swagger) {
 		this.swagger = swagger;
 	}  
-	
+
+	public String getRepository() {
+		return repository;
+	}
+
+	public void setRepository(String repository) {
+		this.repository = repository;
+	}
 
 	public String getMapperTest() {
 		return mapperTest;

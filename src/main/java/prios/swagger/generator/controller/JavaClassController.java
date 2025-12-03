@@ -33,7 +33,7 @@ class JavaClassController {
 		Map<String, String> response = javaClassGeneratorService.generate(request.getMainClassContent(),
 				request.getSecondaryClassContent(), deleteRecord, idCompany);
 
-		return new ApiJavaClassResponse(response.get("mapper"), response.get("mapperTest"), response.get("mapperView"), response.get("mapperViewTest"), response.get("service"),
+		return new ApiJavaClassResponse(response.get("mapper"), response.get("mapperTest"), response.get("mapperView"), response.get("mapperViewTest"), response.get("repository"), response.get("service"),
 				response.get("serviceImpl"), response.get("serviceImplTest"), response.get("controller"),  response.get("controllerTest"), response.get("swagger"));
 	}
 

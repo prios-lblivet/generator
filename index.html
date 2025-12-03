@@ -543,6 +543,7 @@
 				<div class="tab" onclick="openTab(event, 'javaClass_mapper')">Mapper</div>
 				<div class="tab" onclick="openTab(event, 'javaClass_mapper_view')">Mapper vue</div>
 				<div class="tab" onclick="openTab(event, 'javaClass_service')">Service</div>
+				<div class="tab" onclick="openTab(event, 'javaClass_repository')">Repository</div>
 				<div class="tab" onclick="openTab(event, 'javaClass_serviceImpl')">ServiceImpl</div>
 				<div class="tab" onclick="openTab(event, 'javaClass_controller')">Controller</div>
 				<div class="tab" onclick="openTab(event, 'javaClass_swagger')">Swagger</div>
@@ -598,10 +599,14 @@
 							</div>
 						</div>
 					</div>
+					<div id="javaClass_repository" class="tab-content">
+						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassRepository', this)">Copier</button>
+						<pre><code id="generatedJavaClassRepository" class="code-block language-java">En attente de la génération du repository...</code></pre>
+					</div>	
 					<div id="javaClass_service" class="tab-content">
 						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassService', this)">Copier</button>
 						<pre><code id="generatedJavaClassService" class="code-block language-java">En attente de la génération du service...</code></pre>
-					</div>
+					</div>					
 					<div id="javaClass_serviceImpl" class="tab-content">
 						<div class="code-container" style="display: flex; gap: 20px;">
 							<div class="code-block-container">
