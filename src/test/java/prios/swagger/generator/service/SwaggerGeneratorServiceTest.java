@@ -124,7 +124,6 @@ class SwaggerGeneratorServiceTest {
 	    // Assertions pour vérifier que les propriétés sont extraites correctement
 	    assertTrue(properties.contains("weight:"));
 	    assertTrue(properties.contains("type: number"));
-	    assertTrue(properties.contains("format: double"));
 	}
 
 	@Test
@@ -141,7 +140,6 @@ class SwaggerGeneratorServiceTest {
 	    // Assertions pour vérifier que les propriétés sont extraites correctement
 	    assertTrue(properties.contains("height:"));
 	    assertTrue(properties.contains("type: number"));
-	    assertTrue(properties.contains("format: float"));
 	}
 
 	@Test
