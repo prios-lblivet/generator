@@ -96,7 +96,7 @@ function generateJava() {
 	            document.getElementById("generatedService").textContent = data.service;
 	            document.getElementById("generatedServiceImpl").textContent = data.serviceImpl;
 	            document.getElementById("generatedRepository").textContent = data.repository;
-	            document.getElementById("generatedSwagger").textContent = data.swagger;
+				document.getElementById("generatedSwagger").textContent = data.swagger;
 	            Prism.highlightAll();
 	            
 	            // Afficher le message de succès
@@ -379,7 +379,8 @@ function generateJavaClass() {
 				document.getElementById("generatedJavaClassServiceImplTest").textContent = data.serviceImplTest; 
 				document.getElementById("generatedJavaClassController").textContent = data.controller; 
 				document.getElementById("generatedJavaClassControllerTest").textContent = data.controllerTest; 
-	            document.getElementById("generatedJavaClassSwagger").textContent = data.swagger; 
+				document.getElementById("generatedJavaClassSwagger").textContent = data.swagger; 
+				document.getElementById("generatedJavaClassFeign").textContent = data.feign; 
 	            Prism.highlightAll();
 	            
 	            // Afficher le message de succès

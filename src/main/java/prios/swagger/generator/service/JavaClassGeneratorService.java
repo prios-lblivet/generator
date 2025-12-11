@@ -81,6 +81,9 @@ public class JavaClassGeneratorService {
 						generateControllerTest(api, classNameImport, className, classNamePlural, lowerClassName,
 								lowerClassNamePlural, entityName, entity.toString(), entityView.toString(), dto.toString(), dtoView.toString(), hasView, deleteRecord, idCompany));
 		
+		response.put("feign", generateFeignClient(api, classNameImport, className, classNamePlural, lowerClassName,
+				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany));
+		
 		final String[] tabInfo = {null, null};  // Tableau pour stocker le titre et la description
         try {
             // Créer une instance de JavaParser
@@ -657,7 +660,7 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("      responses:\n");
 		swaggerBuilder.append("        \"200\":\n");
 		swaggerBuilder.append("          description: Liste des ").append(classNamePlural)
-				.append(" récupérée avec succès\n");
+				.append(" récupéréée avec succès\n");
 		swaggerBuilder.append("          content:\n");
 		swaggerBuilder.append("            application/json:\n");
 		swaggerBuilder.append("              schema:\n");
@@ -1212,10 +1215,24 @@ public class JavaClassGeneratorService {
 			.append("    void testGetAll").append(className).append("ViewWith1Result() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View);\n")
 			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
-			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
+			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
+			if (idCompany) {
+				controllerTest.append(", anyInt(), anyInt()");
+			}
+			if (deleteRecord) {
+				controllerTest.append(", any()");
+			}
+			controllerTest.append(")).thenReturn(views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, \"N\", \"full\", null);\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+			if (idCompany) {
+				controllerTest.append(", anyInt(), anyInt()");
+			}
+			if (deleteRecord) {
+				controllerTest.append(", \"N\"");
+			}
+			controllerTest.append(", \"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
@@ -1225,10 +1242,21 @@ public class JavaClassGeneratorService {
 			.append("    void testGetAll").append(className).append("ViewWith2Results() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
 			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
-			.append("        when(").append(lowerClassName).append("Service.findAllView(any(), anyInt(), anyInt(), any())).thenReturn(views);\n")
+			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
+			if (idCompany) {
+				controllerTest.append(", anyInt(), anyInt()");
+			}
+			if (deleteRecord) {
+				controllerTest.append(", any()");
+			}			
+			controllerTest.append(")).thenReturn(views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2, \"N\",\"full\", null);\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+			if (deleteRecord) {
+				controllerTest.append(", \"N\"");
+			}	
+			controllerTest.append(",\"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
@@ -1256,6 +1284,74 @@ public class JavaClassGeneratorService {
 		controllerTest.append("}\n");
 
 		return controllerTest.toString();
+	}
+	
+	private String generateFeignClient(String api, String classNameImport, String className, String classNamePlural,
+			String lowerClassName, String lowerClassNamePlural, String entityName, boolean hasView,
+			boolean deleteRecord, boolean idCompany) {
+		
+		StringBuilder feign = new StringBuilder();
+
+		// --- Package & Imports ---		
+		feign.append("package com.prios.core.a.feign.").append(api).append(".").append(classNameImport).append(";\n\n")
+		.append("import java.util.List;\n")
+		.append("import java.util.Map;\n")
+		.append("import org.springframework.cloud.openfeign.FeignClient;\n")
+		.append("import org.springframework.web.bind.annotation.GetMapping;\n")
+		.append("import org.springframework.web.bind.annotation.PathVariable;\n")
+		.append("import org.springframework.web.bind.annotation.RequestHeader;\n")
+		.append("import org.springframework.web.bind.annotation.RequestParam;\n\n")
+		.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n");
+		if (hasView) {
+			feign.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n");
+		}
+		// --- Feign Client Interface ---
+		feign.append("\n@FeignClient(name=\"api-a-").append(api).append("\", path=\"/v1/").append(lowerClassNamePlural).append("\")\n")
+		.append("public interface ").append(className).append("FeignClient {\n\n")
+		.append("    @GetMapping\n")
+		.append("    List<").append(className).append("Dto> getAll(\n")
+		.append("        @RequestHeader int idCompany,\n")
+		.append("        @RequestHeader int idEstablishment,\n");
+		if (hasView) {
+			feign.append("        @RequestParam(required = false) String detail,\n");
+		}
+		if (deleteRecord) {
+			feign.append("        @RequestParam(required = false) String deleteRecord,\n");
+		}
+		feign.append("        @RequestParam(required = false) Map<String, Object> priosParams);\n\n");
+		
+		if (hasView) {
+			feign.append("    @GetMapping\n")
+			.append("    List<").append(className).append("ViewDto> getAllView(\n")
+			.append("        @RequestHeader int idCompany,\n")
+			.append("        @RequestHeader int idEstablishment,\n")
+			.append("        @RequestParam(required = false) String detail");			
+			if (deleteRecord) {
+				feign.append(",\n        @RequestParam(required = false) String deleteRecord");
+			}
+			feign.append(",\n        @RequestParam(required = false) Map<String, Object> priosParams);\n\n");
+		}
+		feign.append("    @GetMapping(\"/{id}\")\n")
+		.append("    ").append(className).append("Dto getById(\n")
+		.append("        @PathVariable int id,\n")
+		.append("        @RequestHeader int idCompany,\n")
+		.append("        @RequestHeader int idEstablishment");
+		if (hasView) {
+			feign.append(",\n        @RequestParam(required = false) String detail");
+		}
+		feign.append(");\n");
+		
+		if (hasView) {
+			feign.append("\n    @GetMapping(\"/{id}\")\n")
+			.append("    List<").append(className).append("ViewDto> getViewById(\n")
+			.append("        @PathVariable int id,\n")
+			.append("        @RequestHeader int idCompany,\n")
+			.append("        @RequestHeader int idEstablishment,\n")
+			.append("        @RequestParam(required = false) String detail);\n");
+		}
+		feign.append("}");
+		
+		return feign.toString();
 	}
 
 	private void generateEntityAndDto(String javaClassContent, String javaClassContent2, StringBuilder entity, StringBuilder dto, String className, String entityName, String lowerClassName, String number) {

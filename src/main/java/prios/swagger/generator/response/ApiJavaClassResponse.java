@@ -13,9 +13,10 @@ public class ApiJavaClassResponse {
     private String controller;
     private String controllerTest;
     private String swagger;
+    private String feign;
 
 	public ApiJavaClassResponse(String mapper, String mapperTest, String mapperView, String mapperViewTest, String repository, String service,
-			String serviceImpl, String serviceImplTest, String controller, String controllerTest, String swagger) {
+			String serviceImpl, String serviceImplTest, String controller, String controllerTest, String swagger, String feign) {
 		this.mapper = mapper;
 		this.mapperTest = mapperTest;
 		this.mapperView = mapperView;
@@ -27,6 +28,7 @@ public class ApiJavaClassResponse {
 		this.controller = controller;
 		this.controllerTest = controllerTest;
 		this.swagger = swagger;
+		this.feign = feign;
 	}
     
 	public String getMapper() {
@@ -116,4 +118,12 @@ public class ApiJavaClassResponse {
 	public void setControllerTest(String controllerTest) {
 		this.controllerTest = controllerTest;
 	}
+	
+	public String getFeign() {
+		return feign;
+	}
+	
+	public void setFeign(String feign) {
+		this.feign = feign;
+	}	
 }
