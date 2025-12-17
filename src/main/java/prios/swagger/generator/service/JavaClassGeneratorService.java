@@ -417,11 +417,11 @@ public class JavaClassGeneratorService {
 		serviceImplBuilder.append(") {\n")
 				.append("        PriosParams params = new PriosParams(");
 		if (idCompany) {
-			serviceImplBuilder.append("idCompany,idEstablishment,");
+			serviceImplBuilder.append("idCompany, idEstablishment, ");
 		}
 		serviceImplBuilder.append("requestParams");
 		if (deleteRecord) {
-			serviceImplBuilder.append(",deleteRecord");
+			serviceImplBuilder.append(", deleteRecord");
 		}
 		serviceImplBuilder.append(");\n        return ").append(lowerClassName)
 				.append("Repository.findAll(table(params));\n").append("    }\n\n");
@@ -537,7 +537,7 @@ public class JavaClassGeneratorService {
 		if (deleteRecord) {
 			controllerBuilder.append(", @Valid String deleteRecord");
 		}
-		controllerBuilder.append(" ,@Valid Map<String, Object> criteriaParam");
+		controllerBuilder.append(", @Valid Map<String, Object> criteriaParam");
 		controllerBuilder.append(") {\n");
 
 		if (hasView) {
@@ -572,7 +572,7 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			controllerBuilder.append("Abstract");
 		}
-		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(Integer id, ");
+		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(@NotNull Integer id, ");
 		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
 		if (hasView)
 			controllerBuilder.append(", @Valid String detail");
@@ -1049,7 +1049,7 @@ public class JavaClassGeneratorService {
 		}
 
 		controllerTest.append("\n@ExtendWith(MockitoExtension.class)\n")
-		.append("class ").append(className).append("ControllerTest {\n\n")
+		.append("class ").append(className).append("ControllerRestTest {\n\n")
 		.append("    @Mock\n")
 		.append("    ").append(className).append("ServiceImpl ").append(lowerClassName).append("Service;\n\n")
 		.append("    @Mock\n")
@@ -1137,8 +1137,8 @@ public class JavaClassGeneratorService {
 
 		controllerTest.append("    @Test\n")
 		.append("    void testGetAll").append(className).append("With2Results() {\n").append("        //GIVEN \n")
-		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(",").append(lowerClassName).append("2);\n")
-		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto,").append(lowerClassName).append("Dto2);\n")
+		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(", ").append(lowerClassName).append("2);\n")
+		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto, ").append(lowerClassName).append("Dto2);\n")
 		.append("        when(").append(lowerClassName).append("Service.findAll(any()");
 		if (idCompany) {
 			controllerTest.append(", anyInt(), anyInt()");
@@ -1306,7 +1306,7 @@ public class JavaClassGeneratorService {
 			feign.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n");
 		}
 		// --- Feign Client Interface ---
-		feign.append("\n@FeignClient(name=\"api-a-").append(api).append("\", path=\"/v1/").append(lowerClassNamePlural).append("\")\n")
+		feign.append("\n@FeignClient(name = \"api-a-").append(api).append("\", path = \"/v1/").append(lowerClassNamePlural).append("\")\n")
 		.append("public interface ").append(className).append("FeignClient {\n\n")
 		.append("    @GetMapping\n")
 		.append("    List<").append(className).append("Dto> getAll(\n")
@@ -1318,7 +1318,7 @@ public class JavaClassGeneratorService {
 		if (deleteRecord) {
 			feign.append("        @RequestParam(required = false) String deleteRecord,\n");
 		}
-		feign.append("        @RequestParam(required = false) Map<String, Object> priosParams);\n\n");
+		feign.append("        @RequestParam(required = false) Map<String, Object> criteriaParam);\n\n");
 		
 		if (hasView) {
 			feign.append("    @GetMapping\n")
@@ -1633,18 +1633,17 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 				if ("ApiObjectField".equals(normalAnnotation.getNameAsString())) {
 					for (MemberValuePair pair : normalAnnotation.getPairs()) {
 						if ("description".equals(pair.getNameAsString())) {
-							description = pair.getValue().toString().replace("\"", "").replace(":", ""); // Retirer les
+							description = pair.getValue().toString().replace("\"", "").replace(": ", ""); // Retirer les
 																											// guillemets
 						}
 					}
 				}
 
-				if (description == null) {
-					if (field.hasJavaDocComment()) {
-						Javadoc javadoc = field.getJavadoc().get();
-						description = javadoc.getDescription().toText().trim();
-					}
+				if (description == null && field.hasJavaDocComment()) {
+					Javadoc javadoc = field.getJavadoc().get();
+					description = javadoc.getDescription().toText().replace("\"", "").replace(": ", "").trim();
 				}
+
 			}
 		}
 
@@ -1739,13 +1738,13 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 	        if (baseString.contains("phone")) {
 	            // Exemple de numéro de téléphone
 	            sb.append("06 64 67 85 32");
+	        } else if (baseString.contains("mail")) {
+	            // Exemple d'email
+	            sb.append("exemple@email.com"); 
 	        } else if (baseString.contains("address")) {
 	            // Exemple d'adresse
 	            sb.append("123 Rue de l'Exemple 75001 Paris");
-	        } else if (baseString.contains("mail")) {
-	            // Exemple d'email
-	            sb.append("exemple@email.com");} 
-	        else if (baseString.contains("ean128")) {
+	        } else if (baseString.contains("ean128")) {
 	            // Exemple de code ean 128
 	            sb.append("(01)01234567890128");
 	        } else if (baseString.contains("ean113")) {
