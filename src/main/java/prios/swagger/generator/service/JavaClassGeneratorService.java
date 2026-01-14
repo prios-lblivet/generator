@@ -25,7 +25,7 @@ public class JavaClassGeneratorService {
 	private static final Random random = new Random();
 
 	public Map<String, String> generate(String javaClassContent, String javaViewClassContent, boolean deleteRecord,
-			boolean idCompany) {
+			boolean idCompany, boolean postAll, boolean putAll, boolean patchById, boolean deleteAll) {
 		Map<String, String> response = new HashMap<>();
 		boolean hasView = javaViewClassContent != null && !javaViewClassContent.isEmpty();
 
@@ -133,7 +133,7 @@ public class JavaClassGeneratorService {
 	    String description = tabInfo != null && tabInfo[1] != null ? tabInfo[1] : title;  // Utiliser le nom de la classe par défaut
 		    
 		response.put("swagger", generateSwagger(api, classNameImport, className, classNamePlural, lowerClassName,
-				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany, title, description, javaClassContent, javaViewClassContent));
+				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany, title, description, javaClassContent, javaViewClassContent, postAll, putAll, patchById, deleteAll));
 
 		return response;
 	}
@@ -604,7 +604,8 @@ public class JavaClassGeneratorService {
 
 	public String generateSwagger(String api, String classNameImport, String className, String classNamePlural,
 			String lowerClassName, String lowerClassNamePlural, String entityName, boolean hasView,
-			boolean deleteRecord, boolean idCompany, String title, String description, String javaClass, String viewClass) {
+			boolean deleteRecord, boolean idCompany, String title, String description, String javaClass,
+			String viewClass, boolean postAll, boolean putAll, boolean patchById, boolean deleteAll) {
 
 		StringBuilder swaggerBuilder = new StringBuilder();
 
@@ -658,7 +659,7 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("            type: object\n");
 		swaggerBuilder.append("            additionalProperties: true\n");
 		swaggerBuilder.append("      responses:\n");
-		swaggerBuilder.append("        \"200\":\n");
+		swaggerBuilder.append("        \'200\':\n");
 		swaggerBuilder.append("          description: Liste des ").append(classNamePlural)
 				.append(" récupéréée avec succès\n");
 		swaggerBuilder.append("          content:\n");
@@ -670,7 +671,7 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			swaggerBuilder.append("Abstract");
 		}
-		swaggerBuilder.append(className).append("\"\n\n");
+		swaggerBuilder.append(className).append("\"\n");
 		swaggerBuilder.append("            application/xml:\n");
 		swaggerBuilder.append("              schema:\n");
 		swaggerBuilder.append("                type: array\n");
@@ -680,6 +681,166 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("Abstract");
 		}
 		swaggerBuilder.append(className).append("\"\n\n");
+		
+		if (postAll) {
+			swaggerBuilder.append("    post:\n");
+			swaggerBuilder.append("      summary: Créer une liste de ").append(className).append("\n");
+			swaggerBuilder.append("      description: Créer un liste de ").append(className).append("\n");
+			swaggerBuilder.append("      operationId: create").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      tags:\n");
+			swaggerBuilder.append("        - ").append(className).append("\n");
+			swaggerBuilder.append("      parameters:\n");
+			swaggerBuilder.append("        - name: idCompany\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("        - name: idEstablishment\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("      requestBody:\n");
+			swaggerBuilder.append("        required: true\n");
+			swaggerBuilder.append("        content:\n");
+			swaggerBuilder.append("          application/json:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("          application/xml:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("      responses:\n");
+			swaggerBuilder.append("        \'201\':\n");
+			swaggerBuilder.append("          description: Liste des ").append(className)
+					.append(" créées avec succès\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("            application/xml:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("        \'406\':\n");
+			swaggerBuilder.append("          description: validation erreur\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/ManageError\"\n\n");
+		}
+
+		if (putAll) {
+			swaggerBuilder.append("    put:\n");
+			swaggerBuilder.append("      summary: Modifie une liste de ").append(className).append("\n");
+			swaggerBuilder.append("      description: Modifie un liste de ").append(className).append("\n");
+			swaggerBuilder.append("      operationId: update").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      tags:\n");
+			swaggerBuilder.append("        - ").append(className).append("\n");
+			swaggerBuilder.append("      parameters:\n");
+			swaggerBuilder.append("        - name: idCompany\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("        - name: idEstablishment\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("      requestBody:\n");
+			swaggerBuilder.append("        required: true\n");
+			swaggerBuilder.append("        content:\n");
+			swaggerBuilder.append("          application/json:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("          application/xml:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("      responses:\n");
+			swaggerBuilder.append("        \'200\':\n");
+			swaggerBuilder.append("          description: Liste de ").append(className).append(" modifié avec succès\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("            application/xml:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("        \'406\':\n");
+			swaggerBuilder.append("          description: validation erreur\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/ManageError\"\n\n");
+		}
+		
+		if (deleteAll) {
+			swaggerBuilder.append("    delete:\n");
+			swaggerBuilder.append("      summary: Supprime une liste de ").append(className).append("\n");
+			swaggerBuilder.append("      description: Supprime un liste de ").append(className).append("\n");
+			swaggerBuilder.append("      operationId: delete").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      tags:\n");
+			swaggerBuilder.append("        - ").append(className).append("\n");
+			swaggerBuilder.append("      parameters:\n");
+			swaggerBuilder.append("        - name: idCompany\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("        - name: idEstablishment\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("      requestBody:\n");
+			swaggerBuilder.append("        required: true\n");
+			swaggerBuilder.append("        content:\n");
+			swaggerBuilder.append("          application/json:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("          application/xml:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: array\n");
+			swaggerBuilder.append("              items:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("      responses:\n");
+			swaggerBuilder.append("        \'200\':\n");
+			swaggerBuilder.append("          description: Liste de ").append(className).append(" supprimé avec succès\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("            application/xml:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                type: array\n");
+			swaggerBuilder.append("                items:\n");
+			swaggerBuilder.append("                  $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("        \'406\':\n");
+			swaggerBuilder.append("          description: validation erreur\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/ManageError\"\n\n");
+		}
 
 		swaggerBuilder.append("  /v1/").append(lowerClassNamePlural).append("/{id}:\n");
 		swaggerBuilder.append("    get:\n");
@@ -713,7 +874,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("            type: string\n");
 		}
 		swaggerBuilder.append("      responses:\n");
-		swaggerBuilder.append("        \"200\":\n");
+		swaggerBuilder.append("        \'200\':\n");
 		swaggerBuilder.append("          description: ").append(className).append(" récupéré avec succès\n");
 		swaggerBuilder.append("          content:\n");
 		swaggerBuilder.append("            application/json:\n");
@@ -723,8 +884,50 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("Abstract");
 		}
 		swaggerBuilder.append(className).append("\"\n");
-		swaggerBuilder.append("        \"404\":\n");
+		swaggerBuilder.append("        \'404\':\n");
 		swaggerBuilder.append("          description: ").append(className).append(" non trouvé\n\n");
+		
+		if (patchById) {
+			swaggerBuilder.append("    patch:\n");
+			swaggerBuilder.append("      summary: Mise à jour partiel d'un ").append(className).append(" par son id\n");
+			swaggerBuilder.append("      description: Mise à jour partiel d'un ").append(className).append(" par son id\n");
+			swaggerBuilder.append("      operationId: patch").append(className).append("ById\n");
+			swaggerBuilder.append("      tags:\n");
+			swaggerBuilder.append("        - ").append(className).append("\n");
+			swaggerBuilder.append("      parameters:\n");
+			swaggerBuilder.append("        - name: idCompany\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("        - name: idEstablishment\n");
+			swaggerBuilder.append("          in: header\n");
+			swaggerBuilder.append("          required: true\n");
+			swaggerBuilder.append("          schema:\n");
+			swaggerBuilder.append("            type: integer\n");
+			swaggerBuilder.append("      requestBody:\n");
+			swaggerBuilder.append("        required: true\n");
+			swaggerBuilder.append("        content:\n");
+			swaggerBuilder.append("          application/json:\n");
+			swaggerBuilder.append("            schema:\n");
+			swaggerBuilder.append("              type: object\n");
+			swaggerBuilder.append("              description: Liste des champs à mettre à jour partiellement dans un ").append(className).append("\n");
+			swaggerBuilder.append("              additionalProperties: true\n");
+			swaggerBuilder.append("      responses:\n");
+			swaggerBuilder.append("        \'200\':\n");
+			swaggerBuilder.append("          description: ").append(className).append(" modifié avec succès\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/").append(className).append("\"\n");
+			swaggerBuilder.append("        \'406\':\n");
+			swaggerBuilder.append("          description: validation erreur\n");
+			swaggerBuilder.append("          content:\n");
+			swaggerBuilder.append("            application/json:\n");
+			swaggerBuilder.append("              schema:\n");
+			swaggerBuilder.append("                $ref: \"#/components/schemas/ManageError\"\n\n");
+		}
+		
 		swaggerBuilder.append("components:\n");
 		swaggerBuilder.append("  schemas:\n");
 		swaggerBuilder.append("    ").append(className).append(":\n");
@@ -735,15 +938,20 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			swaggerBuilder.append("\n    ").append(className).append("View:\n")
 			.append("      allOf:\n")
-			.append("        - $ref: '#/components/schemas/").append(className).append("'\n")
+			.append("        - $ref: \"#/components/schemas/").append(className).append("\"\n")
 			.append("      type: object\n")
 			.append("      properties:\n")
 			.append(extractClassProperties(viewClass)).append("\n")
 			
 			.append("    Abstract").append(className).append(":\n")
 			.append("      oneOf:\n")
-			.append("        - $ref: '#/components/schemas/").append(className).append("'\n")
-			.append("        - $ref: '#/components/schemas/").append(className).append("View'\n");
+			.append("        - $ref: \"#/components/schemas/").append(className).append("\"\n")
+			.append("        - $ref: \"#/components/schemas/").append(className).append("View\"\n");
+		}
+		
+		if (postAll || putAll || patchById || deleteAll) {
+			swaggerBuilder.append("\n    ManageError:\n")
+			.append("      type: manageErrorType\n");
 		}
 
 		return swaggerBuilder.toString();
@@ -1213,8 +1421,8 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			controllerTest.append("    @Test\n")
 			.append("    void testGetAll").append(className).append("ViewWith1Result() {\n").append("        //GIVEN \n")
-			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View);\n")
-			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
+			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View);\n")
+			.append("        List<").append(className).append("View> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
 			if (idCompany) {
 				controllerTest.append(", anyInt(), anyInt()");
@@ -1222,8 +1430,8 @@ public class JavaClassGeneratorService {
 			if (deleteRecord) {
 				controllerTest.append(", any()");
 			}
-			controllerTest.append(")).thenReturn(views);\n")
-			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
+			controllerTest.append(")).thenReturn(").append(lowerClassName).append("Views);\n")
+			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(").append(lowerClassName).append("ViewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
 			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
 			if (idCompany) {
@@ -1235,21 +1443,21 @@ public class JavaClassGeneratorService {
 			controllerTest.append(", \"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
-			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
+			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("ViewDtos));\n")
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
 			.append("    void testGetAll").append(className).append("ViewWith2Results() {\n").append("        //GIVEN \n")
-			.append("        List<").append(className).append("View> views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
-			.append("        List<").append(className).append("ViewDto> viewDtos = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
+			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
+			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
 			if (idCompany) {
 				controllerTest.append(", anyInt(), anyInt()");
 			}
 			if (deleteRecord) {
 				controllerTest.append(", any()");
-			}			
-			controllerTest.append(")).thenReturn(views);\n")
+			}		
+			controllerTest.append(")).thenReturn(").append(lowerClassName).append("Views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
 			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
@@ -1343,7 +1551,7 @@ public class JavaClassGeneratorService {
 		
 		if (hasView) {
 			feign.append("\n    @GetMapping(\"/{id}\")\n")
-			.append("    List<").append(className).append("ViewDto> getViewById(\n")
+			.append("    ").append(className).append("ViewDto getViewById(\n")
 			.append("        @PathVariable int id,\n")
 			.append("        @RequestHeader int idCompany,\n")
 			.append("        @RequestHeader int idEstablishment,\n")

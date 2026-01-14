@@ -333,8 +333,12 @@ function generateJavaClass() {
     const javaClassInputSecondary = document.getElementById("javaClassInputSecondary").value.trim();
 
     // Tes checkboxes
-    const deleteRecord = document.getElementById("deleteRecord").checked;
-    const idCompany = document.getElementById("idCompany").checked;
+	const deleteRecord = document.getElementById("deleteRecord").checked;
+	const idCompany = document.getElementById("idCompany").checked;
+	const postAll = document.getElementById("postAll").checked;
+	const putAll = document.getElementById("putAll").checked;
+	const patchById = document.getElementById("patchById").checked;
+	const deleteAll = document.getElementById("deleteAll").checked;
 
 	if (!javaClassInputMain.trim()) {
 		alert("Veuillez coller votre classe");
@@ -353,8 +357,12 @@ function generateJavaClass() {
 	        method: "POST",
 	        headers: {
 	            "Content-Type": "application/json",
-	            "deleteRecord": deleteRecord,
-	            "idCompany": idCompany
+				"deleteRecord": deleteRecord,
+				"idCompany": idCompany,
+				"postAll": postAll,
+				"putAll": putAll,
+				"patchById": patchById,
+				"deleteAll": deleteAll
 	        },
 	        body: JSON.stringify(body)
 	        })

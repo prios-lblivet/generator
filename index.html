@@ -552,13 +552,32 @@
 			<div class="height">
 				<div class="container-flex">
 					<div id="javaClass_import" class="tab-content active">
-						<div class="param-buttons" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-							<label>
-								<input type="checkbox" id="deleteRecord" checked> deleteRecord
+						<div class="param-buttons" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between;">
+						  <div style="display: flex; gap: 10px; align-items: center;">
+						    <label>
+						      <input type="checkbox" id="deleteRecord" checked> deleteRecord
+						    </label>
+						    <label>
+						      <input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
+						    </label>
+						  </div>
+						  <div style="display: flex; gap: 10px; align-items: center;">
+							<label style="color: rgb(41, 68, 113);">
+								Méthodes REST à générer :
 							</label>
-							<label>
-								<input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
-							</label>
+						    <label>
+						      <input type="checkbox" id="postAll"> postAll
+						    </label>
+						    <label>
+						      <input type="checkbox" id="putAll"> putAll
+						    </label>
+						    <label>
+						      <input type="checkbox" id="patchById"> patchById
+						    </label>
+						    <label>
+						      <input type="checkbox" id="deleteAll"> deleteAll
+						    </label>
+						  </div>
 						</div>
 		
 						<!-- Textareas pour les classes -->
