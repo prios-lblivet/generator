@@ -68,15 +68,15 @@ public class JavaClassGeneratorService {
 
 		}
 		response.put("repository", generateRepository(api, classNameImport, className));
-		response.put("service", generateService(api, classNameImport, className, lowerClassName, lowerClassNamePlural,
-				entityName, hasView, deleteRecord, idCompany));
+		response.put("service", generateService(api, classNameImport, className, classNamePlural, lowerClassName, lowerClassNamePlural,
+				entityName, hasView, deleteRecord, idCompany, postAll, putAll, patchById, deleteAll));
 		response.put("serviceImpl",
 				generateServiceImpl(api, classNameImport, className, lowerClassName, hasView, deleteRecord, idCompany));		
 		response.put("serviceImplTest",
 				generateServiceTest(api, classNameImport, className, classNamePlural, lowerClassName,
 						lowerClassNamePlural, entityName, entity.toString(), entityView.toString(), hasView, deleteRecord, idCompany));
 		response.put("controller", generateController(api, classNameImport, className, classNamePlural, lowerClassName,
-				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany));
+				lowerClassNamePlural, entityName, hasView, deleteRecord, idCompany, postAll, putAll, patchById, deleteAll));
 		response.put("controllerTest",
 						generateControllerTest(api, classNameImport, className, classNamePlural, lowerClassName,
 								lowerClassNamePlural, entityName, entity.toString(), entityView.toString(), dto.toString(), dtoView.toString(), hasView, deleteRecord, idCompany));
@@ -265,8 +265,9 @@ public class JavaClassGeneratorService {
 		return repositoryBuilder.toString();
 	}
 
-	public String generateService(String api, String classNameImport, String className, String lowerClassName,
-			String lowerClassNamePlural, String entityName, boolean hasView, boolean deleteRecord, boolean idCompany) {
+	public String generateService(String api, String classNameImport, String className, String classNamePlural, String lowerClassName,
+			String lowerClassNamePlural, String entityName, boolean hasView, boolean deleteRecord, boolean idCompany,
+			boolean postAll, boolean putAll, boolean patchById, boolean deleteAll) {
 
 		StringBuilder serviceBuilder = new StringBuilder();
 
@@ -285,6 +286,9 @@ public class JavaClassGeneratorService {
 					.append(".").append(className).append("View;\n");
 		}
 
+		if (postAll || putAll || patchById || deleteAll) {
+			serviceBuilder.append("import com.prios.tools.shared.dto.common.ErrorDto;\n");
+		}
 		serviceBuilder.append("import com.prios.tools.util.criteria.SearchCriteria;\n\n");
 
 		// ✅ Déclaration interface
@@ -323,7 +327,32 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			serviceBuilder.append("    Optional<").append(className).append("View> findViewById(final int id);\n\n");
 		}
-
+		
+		if (postAll) {
+			serviceBuilder.append("    List<").append(className).append("Table> preparedCreateErrors(\n")
+				.append("        List<").append(className).append("Table> ").append(lowerClassNamePlural).append(",\n")
+				.append("        List<ErrorDto> errors);\n\n");
+			serviceBuilder.append("    List<").append(className).append("Table> create").append(classNamePlural)
+				.append("(List<").append(className).append("Table> ").append(lowerClassNamePlural).append(");\n\n");
+		}
+		if (putAll) {
+			serviceBuilder.append("    List<").append(className).append("Table> preparedUpdateErrors(\n")
+				.append("        List<").append(className).append("Table> ").append(lowerClassNamePlural).append(",\n")
+				.append("        List<ErrorDto> errors);\n\n");
+			serviceBuilder.append("    List<").append(className).append("Table> update").append(classNamePlural)
+				.append("(List<").append(className).append("Table> ").append(lowerClassNamePlural).append(");\n\n");
+		}
+		if (deleteAll) {
+			serviceBuilder.append("    List<").append(className).append("Table> delete").append(classNamePlural)
+				.append("(List<").append(className).append("Table> ").append(lowerClassNamePlural).append(");\n\n");
+		}
+		if (patchById) {
+			serviceBuilder.append("    List<").append(className).append("Table> preparedPatchErrors(\n")
+			.append("        final Map<String, Object> partial").append(className).append(",\n\n");
+			serviceBuilder.append("    ").append(className).append("Table patch").append(className)
+				.append("(int id, ").append(className).append("Table ").append(lowerClassName).append(");\n\n");
+		}
+		
 		serviceBuilder.append("}");
 
 		return serviceBuilder.toString();
@@ -467,7 +496,7 @@ public class JavaClassGeneratorService {
 
 	public String generateController(String api, String classNameImport, String className, String classNamePlural,
 			String lowerClassName, String lowerClassNamePlural, String entityName, boolean hasView,
-			boolean deleteRecord, boolean idCompany) {
+			boolean deleteRecord, boolean idCompany, boolean postAll, boolean putAll, boolean patchById, boolean deleteAll) {
 		StringBuilder controllerBuilder = new StringBuilder();
 
 		// Package
@@ -500,6 +529,10 @@ public class JavaClassGeneratorService {
 			controllerBuilder.append("Abstract");
 		}
 		controllerBuilder.append(className).append("Dto;\n");
+		if( postAll || putAll || deleteAll || patchById ) {
+			controllerBuilder.append("import com.prios.core.a.util.ErrorUtils;\n");
+			controllerBuilder.append("import com.prios.tools.shared.dto.common.ErrorDto;\n");
+		}
 		controllerBuilder.append("import com.prios.tools.util.MethodUtils;\n")
 				.append("import com.prios.tools.util.StringUtils;\n")
 				.append("import com.prios.tools.util.criteria.SearchUtils;\n\n");
@@ -572,7 +605,7 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			controllerBuilder.append("Abstract");
 		}
-		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(@NotNull Integer id, ");
+		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(Integer id, ");
 		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
 		if (hasView)
 			controllerBuilder.append(", @Valid String detail");
@@ -584,7 +617,7 @@ public class JavaClassGeneratorService {
 					.append(lowerClassName).append("ViewMapper::").append(lowerClassName).append("ViewTo")
 					.append(className).append("ViewDto)\n").append("                .map(Abstract").append(className)
 					.append("Dto.class::cast)\n").append("                .map(ResponseEntity::ok)\n")
-					.append("                .orElse(ResponseEntity.notFound().build());\n").append("        }\n\n");
+					.append("                .orElse(ResponseEntity.noContent().build());\n").append("        }\n\n");
 		}
 
 		controllerBuilder.append("        return ").append(lowerClassName).append("Service.findById(id)\n")
@@ -594,11 +627,83 @@ public class JavaClassGeneratorService {
 			controllerBuilder.append("            .map(Abstract").append(className).append("Dto.class::cast)\n");
 		}
 		controllerBuilder.append("            .map(ResponseEntity::ok)\n")
-				.append("            .orElse(ResponseEntity.notFound().build());\n");
+				.append("            .orElse(ResponseEntity.noContent().build());\n");
 		controllerBuilder.append("    }\n");
-
+		
+		if (postAll) {
+			controllerBuilder.append("\n    @Override\n")
+				.append("    public ResponseEntity<List<")
+				.append(className).append("Dto>> create").append(classNamePlural)
+				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
+				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
+				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToCreates = ")
+				.append(lowerClassName).append("Service.preparedCreateErrors(\n")
+				.append("            ").append(lowerClassName).append("Mapper.").append(lowerClassName).append("DtosTo").append(classNamePlural)
+				.append("(").append(lowerClassName).append("Dtos), errors);\n")
+				.append("        ErrorUtils.throwAndLogErrorIfPresent(errors);\n")
+				.append("        List<").append(className).append("Table> created").append(classNamePlural).append(" = ")
+				.append(lowerClassName).append("Service.create").append(classNamePlural).append("(").append(lowerClassName).append("ToCreates);\n")
+				.append("        List<").append(className).append("Dto> created").append(className).append("Dtos = ")
+				.append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className).append("Dtos(created")
+				.append(classNamePlural).append(");\n")
+				.append("        return new ResponseEntity<>(created").append(className).append("Dtos, HttpStatus.CREATED);\n    }\n");	
+		}
+			
+		if (putAll) {
+			controllerBuilder.append("\n    @Override\n")
+				.append("    public ResponseEntity<List<")
+				.append(className).append("Dto>> update").append(classNamePlural)
+				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
+				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
+				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToUpdates = ")
+				.append(lowerClassName).append("Service.preparedUpdateErrors(\n")
+				.append("            ").append(lowerClassName).append("Mapper.").append(lowerClassName).append("DtosTo").append(classNamePlural)
+				.append("(").append(lowerClassName).append("Dtos), errors);\n")
+				.append("        ErrorUtils.throwAndLogErrorIfPresent(errors);\n")
+				.append("        List<").append(className).append("Table> updated").append(classNamePlural).append(" = ")
+				.append(lowerClassName).append("Service.update").append(classNamePlural).append("(").append(lowerClassName).append("ToUpdates);\n")
+				.append("        List<").append(className).append("Dto> updated").append(className).append("Dtos = ")
+				.append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className).append("Dtos(update")
+				.append(classNamePlural).append(");\n")
+				.append("        return ResponseEntity.ok(updated").append(className).append("Dtos);\n    }\n");
+		}				
+		if (deleteAll) {
+			controllerBuilder.append("\n    @Override\n")
+				.append("    public ResponseEntity<List<")
+				.append(className).append("Dto>> delete").append(classNamePlural)
+				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
+				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToDeletes = ")
+				.append(lowerClassName).append("Mapper.").append(lowerClassName).append("DtosTo").append(classNamePlural)
+				.append("(").append(lowerClassName).append("Dtos);\n")
+				.append("        List<").append(className).append("Table> deleted").append(classNamePlural).append(" = ")
+				.append(lowerClassName).append("Service.delete").append(classNamePlural).append("(").append(lowerClassName).append("ToDeletes);\n")
+				.append("        List<").append(className).append("Dto> deleted").append(className).append("Dtos = ")
+				.append(lowerClassName).append("Mapper.").append(lowerClassNamePlural).append("To").append(className).append("Dtos(")
+				.append(lowerClassNamePlural).append(");\n")
+				.append("        return ResponseEntity.ok(deleted").append(className).append("Dtos);\n    }\n");	
+		}				
+		if (patchById) {
+			controllerBuilder.append("\n    @Override\n")
+				.append("    public ResponseEntity<")
+				.append(className).append("Dto> patch").append(className).append("ById (Integer id, @NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(" @Valid Map<String, Object> requestBody) {\n")
+				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
+				.append("        ").append(className).append("Table ").append(lowerClassName).append("ToUpdate = ")
+				.append(lowerClassName).append("Service.preparedPatchErrors(requestBody, id, errors);\n")
+				.append("        ErrorUtils.throwAndLogErrorIfPresent(errors);\n")
+				.append("        ").append(className).append("Table ").append(lowerClassName).append("Saved = ")
+				.append(lowerClassName).append("Service.patch").append(className).append("(").append(lowerClassName).append("ToUpdate);\n")
+				.append("        ").append(className).append("Dto> updated").append(className).append(" = ")
+				.append(lowerClassName).append("Mapper.").append(lowerClassName).append("To").append(className).append("Dto(updated")
+				.append(className).append(");\n")
+				.append("        return ResponseEntity.ok(updated").append(className).append(");\n    }\n");
+		}
+		
 		controllerBuilder.append("}\n");
-
+		
 		return controllerBuilder.toString();
 	}
 
@@ -884,7 +989,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("Abstract");
 		}
 		swaggerBuilder.append(className).append("\"\n");
-		swaggerBuilder.append("        \'404\':\n");
+		swaggerBuilder.append("        \'204\':\n");
 		swaggerBuilder.append("          description: ").append(className).append(" non trouvé\n\n");
 		
 		if (patchById) {
@@ -1163,7 +1268,7 @@ public class JavaClassGeneratorService {
 
 		serviceTest.append("    }\n\n");
 
-		// --- Tests de base : findById / findById_notFound ---
+		// --- Tests de base : findById / findById_noContent ---
 		serviceTest.append("    @Test\n")
 		.append("    void testFindById() {\n").append("        //GIVEN \n")
 		.append("        when(").append(lowerClassName).append("Repository.findById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("));\n\n").append("        //WHEN \n")
@@ -1174,7 +1279,7 @@ public class JavaClassGeneratorService {
 		.append("    }\n\n")
 
 		.append("    @Test\n")
-		.append("    void testFindById_notFound() {\n").append("        //GIVEN \n")
+		.append("    void testFindById_noContent() {\n").append("        //GIVEN \n")
 		.append("        when(").append(lowerClassName).append("Repository.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 		.append("        Optional<").append(entityName).append("> result = ").append(lowerClassName).append("Service.findById(404);\n\n").append("        //THEN \n")
 		.append("        verify(").append(lowerClassName).append("Repository, times(1)).findById(404);\n")
@@ -1192,7 +1297,7 @@ public class JavaClassGeneratorService {
 			.append("    }\n\n")
 
 			.append("    @Test\n")
-			.append("    void testFindViewById_notFound() {\n").append("        //GIVEN \n")
+			.append("    void testFindViewById_noContent() {\n").append("        //GIVEN \n")
 			.append("        when(").append(lowerClassName).append("ViewRepository.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 			.append("        Optional<").append(className).append("View> result = ").append(lowerClassName).append("Service.findViewById(404);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewRepository, times(1)).findById(404);\n")
@@ -1250,8 +1355,7 @@ public class JavaClassGeneratorService {
 		.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("Dto;\n");
 
 		if (hasView) {
-			controllerTest.append("import com.prios.api.a.").append(api).append(".mapper.").append(classNameImport).append(".").append(className).append("ViewMapper;\n")
-			.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n")
+			controllerTest.append("import com.prios.api.a.").append(api).append(".shared.").append(classNameImport).append(".").append(className).append("View;\n")
 			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append(className).append("ViewDto;\n")
 			.append("import com.prios.core.a.shared.dto.").append(api).append(".").append("Abstract").append(className).append("Dto;\n");
 		}
@@ -1402,7 +1506,7 @@ public class JavaClassGeneratorService {
 		.append("    }\n\n");
 
 		controllerTest.append("    @Test\n")
-		.append("    void testGet").append(className).append("ById_notFound() {\n").append("        //GIVEN \n")
+		.append("    void testGet").append(className).append("ById_noContent() {\n").append("        //GIVEN \n")
 		.append("        when(").append(lowerClassName).append("Service.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 		.append("        ResponseEntity<");
 		if (hasView) {
@@ -1414,7 +1518,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append(", null");
 		}
 		controllerTest.append(");\n\n").append("        //THEN \n")
-		.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.notFound().build());\n")
+		.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.noContent().build());\n")
 		.append("    }\n\n");
 
 		// --- Tests pour la View ---
@@ -1422,7 +1526,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append("    @Test\n")
 			.append("    void testGetAll").append(className).append("ViewWith1Result() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View);\n")
-			.append("        List<").append(className).append("View> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
+			.append("        List<").append(className).append("ViewDto> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
 			if (idCompany) {
 				controllerTest.append(", anyInt(), anyInt()");
@@ -1433,9 +1537,9 @@ public class JavaClassGeneratorService {
 			controllerTest.append(")).thenReturn(").append(lowerClassName).append("Views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(").append(lowerClassName).append("ViewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(");
 			if (idCompany) {
-				controllerTest.append(", anyInt(), anyInt()");
+				controllerTest.append("1, 2");
 			}
 			if (deleteRecord) {
 				controllerTest.append(", \"N\"");
@@ -1449,7 +1553,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append("    @Test\n")
 			.append("    void testGetAll").append(className).append("ViewWith2Results() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
-			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
+			.append("        List<").append(className).append("ViewDto> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
 			if (idCompany) {
 				controllerTest.append(", anyInt(), anyInt()");
@@ -1458,16 +1562,21 @@ public class JavaClassGeneratorService {
 				controllerTest.append(", any()");
 			}		
 			controllerTest.append(")).thenReturn(").append(lowerClassName).append("Views);\n")
-			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(viewDtos);\n\n").append("        //WHEN \n")
-			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+					.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName)
+					.append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(").append(lowerClassName)
+					.append("ViewDtos);\n\n").append("        //WHEN \n")
+					.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
+			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(");
+			if (idCompany) {
+				controllerTest.append("1, 2");
+			}
 			if (deleteRecord) {
 				controllerTest.append(", \"N\"");
 			}	
 			controllerTest.append(",\"full\", null);\n\n").append("        //THEN \n")
 			.append("        verify(").append(lowerClassName).append("ViewMapper, times(1)).").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any());\n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
-			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(viewDtos));\n")
+			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("ViewDtos));\n")
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
@@ -1481,11 +1590,11 @@ public class JavaClassGeneratorService {
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
-			.append("    void testGet").append(className).append("ViewById_notFound() {\n").append("        //GIVEN \n")
+			.append("    void testGet").append(className).append("ViewById_noContent() {\n").append("        //GIVEN \n")
 			.append("        when(").append(lowerClassName).append("Service.findViewById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<Abstract").append(className).append("Dto> response = ")
 			.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(404, 1, 2, \"full\");\n\n").append("        //THEN \n")
-			.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.notFound().build());\n")
+			.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.noContent().build());\n")
 			.append("    }\n\n");
 		}
 
@@ -2005,6 +2114,11 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 				&& Character.isLetter(className.charAt(className.length() - 2))) {
 			// Remplacer "y" par "ies"
 			return className.substring(0, className.length() - 1) + "ies";
+		}
+		if (className.endsWith("ss") && className.length() > 1
+				&& Character.isLetter(className.charAt(className.length() - 2))) {
+			// Remplacer "y" par "ies"
+			return className + "es";
 		} else {
 			// Ajouter "s" par défaut
 			return className + "s";
