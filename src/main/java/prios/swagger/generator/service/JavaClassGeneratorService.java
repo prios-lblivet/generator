@@ -561,7 +561,7 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			controllerBuilder.append("Abstract");
 		}
-		controllerBuilder.append(className).append("Dto>> getAll").append(classNamePlural).append("(");
+		controllerBuilder.append(className).append("Dto>> getAll(");
 		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
 	
 		if (hasView) {
@@ -605,7 +605,7 @@ public class JavaClassGeneratorService {
 		if (hasView) {
 			controllerBuilder.append("Abstract");
 		}
-		controllerBuilder.append(className).append("Dto> get").append(className).append("ById(Integer id, ");
+		controllerBuilder.append(className).append("Dto> getById(Integer id, ");
 		controllerBuilder.append("@NotNull Integer idCompany, @NotNull Integer idEstablishment");
 		if (hasView)
 			controllerBuilder.append(", @Valid String detail");
@@ -633,8 +633,7 @@ public class JavaClassGeneratorService {
 		if (postAll) {
 			controllerBuilder.append("\n    @Override\n")
 				.append("    public ResponseEntity<List<")
-				.append(className).append("Dto>> create").append(classNamePlural)
-				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(className).append("Dto>> postAll(@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
 				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
 				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
 				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToCreates = ")
@@ -653,8 +652,7 @@ public class JavaClassGeneratorService {
 		if (putAll) {
 			controllerBuilder.append("\n    @Override\n")
 				.append("    public ResponseEntity<List<")
-				.append(className).append("Dto>> update").append(classNamePlural)
-				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(className).append("Dto>> putAll(@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
 				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
 				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
 				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToUpdates = ")
@@ -672,8 +670,7 @@ public class JavaClassGeneratorService {
 		if (deleteAll) {
 			controllerBuilder.append("\n    @Override\n")
 				.append("    public ResponseEntity<List<")
-				.append(className).append("Dto>> delete").append(classNamePlural)
-				.append(" (@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(className).append("Dto>> deleteAll(@NotNull Integer idCompany, @NotNull Integer idEstablishment,")
 				.append(" @Valid List<@Valid ").append(className).append("Dto> ").append(lowerClassName).append("Dtos {\n")
 				.append("        List<").append(className).append("Table> ").append(lowerClassName).append("ToDeletes = ")
 				.append(lowerClassName).append("Mapper.").append(lowerClassName).append("DtosTo").append(classNamePlural)
@@ -688,7 +685,7 @@ public class JavaClassGeneratorService {
 		if (patchById) {
 			controllerBuilder.append("\n    @Override\n")
 				.append("    public ResponseEntity<")
-				.append(className).append("Dto> patch").append(className).append("ById (Integer id, @NotNull Integer idCompany, @NotNull Integer idEstablishment,")
+				.append(className).append("Dto> patchById (Integer id, @NotNull Integer idCompany, @NotNull Integer idEstablishment,")
 				.append(" @Valid Map<String, Object> requestBody) {\n")
 				.append("        List<ErrorDto> errors = new ArrayList<>();\n")
 				.append("        ").append(className).append("Table ").append(lowerClassName).append("ToUpdate = ")
@@ -724,7 +721,7 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("    get:\n");
 		swaggerBuilder.append("      summary: Récupère la liste des ").append(className).append("\n");
 		swaggerBuilder.append("      description: Récupère la liste des ").append(className).append("\n");
-		swaggerBuilder.append("      operationId: getAll").append(classNamePlural).append("\n");
+		swaggerBuilder.append("      operationId: getAll\n");
 		swaggerBuilder.append("      tags:\n");
 		swaggerBuilder.append("        - ").append(className).append("\n");
 		swaggerBuilder.append("      parameters:\n");
@@ -791,7 +788,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("    post:\n");
 			swaggerBuilder.append("      summary: Créer une liste de ").append(className).append("\n");
 			swaggerBuilder.append("      description: Créer un liste de ").append(className).append("\n");
-			swaggerBuilder.append("      operationId: create").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      operationId: postAll\n");
 			swaggerBuilder.append("      tags:\n");
 			swaggerBuilder.append("        - ").append(className).append("\n");
 			swaggerBuilder.append("      parameters:\n");
@@ -845,7 +842,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("    put:\n");
 			swaggerBuilder.append("      summary: Modifie une liste de ").append(className).append("\n");
 			swaggerBuilder.append("      description: Modifie un liste de ").append(className).append("\n");
-			swaggerBuilder.append("      operationId: update").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      operationId: putAll\n");
 			swaggerBuilder.append("      tags:\n");
 			swaggerBuilder.append("        - ").append(className).append("\n");
 			swaggerBuilder.append("      parameters:\n");
@@ -898,7 +895,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("    delete:\n");
 			swaggerBuilder.append("      summary: Supprime une liste de ").append(className).append("\n");
 			swaggerBuilder.append("      description: Supprime un liste de ").append(className).append("\n");
-			swaggerBuilder.append("      operationId: delete").append(classNamePlural).append("\n");
+			swaggerBuilder.append("      operationId: deleteAll\n");
 			swaggerBuilder.append("      tags:\n");
 			swaggerBuilder.append("        - ").append(className).append("\n");
 			swaggerBuilder.append("      parameters:\n");
@@ -951,7 +948,7 @@ public class JavaClassGeneratorService {
 		swaggerBuilder.append("    get:\n");
 		swaggerBuilder.append("      summary: Récupère un ").append(className).append(" par son id\n");
 		swaggerBuilder.append("      description: Récupère un ").append(className).append(" par son id\n");
-		swaggerBuilder.append("      operationId: get").append(className).append("ById\n");
+		swaggerBuilder.append("      operationId: getById\n");
 		swaggerBuilder.append("      tags:\n");
 		swaggerBuilder.append("        - ").append(className).append("\n");
 		swaggerBuilder.append("      parameters:\n");
@@ -996,7 +993,7 @@ public class JavaClassGeneratorService {
 			swaggerBuilder.append("    patch:\n");
 			swaggerBuilder.append("      summary: Mise à jour partiel d'un ").append(className).append(" par son id\n");
 			swaggerBuilder.append("      description: Mise à jour partiel d'un ").append(className).append(" par son id\n");
-			swaggerBuilder.append("      operationId: patch").append(className).append("ById\n");
+			swaggerBuilder.append("      operationId: patchById\n");
 			swaggerBuilder.append("      tags:\n");
 			swaggerBuilder.append("        - ").append(className).append("\n");
 			swaggerBuilder.append("      parameters:\n");
@@ -1406,7 +1403,7 @@ public class JavaClassGeneratorService {
 
 		// --- Tests getAll ---
 		controllerTest.append("    @Test\n")
-		.append("    void testGetAll").append(className).append("With1Result() {\n").append("        //GIVEN \n")
+		.append("    void testGetAllWith1Result() {\n").append("        //GIVEN \n")
 		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(");\n")
 		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto);\n")
 		.append("        when(").append(lowerClassName).append("Service.findAll(any()");
@@ -1425,7 +1422,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append("Abstract");
 		}			
 		controllerTest.append(className).append("Dto>> response = ")
-				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+				.append(lowerClassName).append("ControllerRest.getAll(1, 2");
 		if (deleteRecord) {
 			controllerTest.append(",\"N\"");
 		}
@@ -1448,7 +1445,7 @@ public class JavaClassGeneratorService {
 		.append("    }\n\n");
 
 		controllerTest.append("    @Test\n")
-		.append("    void testGetAll").append(className).append("With2Results() {\n").append("        //GIVEN \n")
+		.append("    void testGetAllWith2Results() {\n").append("        //GIVEN \n")
 		.append("        List<").append(entityName).append("> ").append(lowerClassNamePlural).append(" = List.of(").append(lowerClassName).append(", ").append(lowerClassName).append("2);\n")
 		.append("        List<").append(className).append("Dto> ").append(lowerClassName).append("Dtos = List.of(").append(lowerClassName).append("Dto, ").append(lowerClassName).append("Dto2);\n")
 		.append("        when(").append(lowerClassName).append("Service.findAll(any()");
@@ -1465,7 +1462,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append("Abstract");
 		}			
 		controllerTest.append(className).append("Dto>> response = ")
-				.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(1, 2");
+				.append(lowerClassName).append("ControllerRest.getAll(1, 2");
 		if (deleteRecord) {
 			controllerTest.append(",\"N\"");
 		}
@@ -1488,7 +1485,7 @@ public class JavaClassGeneratorService {
 		.append("    }\n\n");
 
 		controllerTest.append("    @Test\n")
-		.append("    void testGet").append(className).append("ById() {\n").append("        //GIVEN \n")
+		.append("    void testGetById() {\n").append("        //GIVEN \n")
 		.append("        when(").append(lowerClassName).append("Mapper.").append(lowerClassName).append("To").append(className).append("Dto(any())).thenReturn(").append(lowerClassName).append("Dto);\n")
 		.append("        when(").append(lowerClassName).append("Service.findById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("));\n\n").append("        //WHEN \n")
 		.append("        ResponseEntity<");
@@ -1496,7 +1493,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append("Abstract");
 		}
 		controllerTest.append(className).append("Dto> response = ")
-		.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(1, 2, 3");
+		.append(lowerClassName).append("ControllerRest.getById(1, 2, 3");
 		if (hasView) {
 			controllerTest.append(", null");
 		}
@@ -1506,14 +1503,14 @@ public class JavaClassGeneratorService {
 		.append("    }\n\n");
 
 		controllerTest.append("    @Test\n")
-		.append("    void testGet").append(className).append("ById_noContent() {\n").append("        //GIVEN \n")
+		.append("    void testGetById_noContent() {\n").append("        //GIVEN \n")
 		.append("        when(").append(lowerClassName).append("Service.findById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 		.append("        ResponseEntity<");
 		if (hasView) {
 			controllerTest.append("Abstract");
 		}
 		controllerTest.append(className).append("Dto> response = ")
-		.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(404, 1, 2");
+		.append(lowerClassName).append("ControllerRest.getById(404, 1, 2");
 		if (hasView) {
 			controllerTest.append(", null");
 		}
@@ -1524,7 +1521,7 @@ public class JavaClassGeneratorService {
 		// --- Tests pour la View ---
 		if (hasView) {
 			controllerTest.append("    @Test\n")
-			.append("    void testGetAll").append(className).append("ViewWith1Result() {\n").append("        //GIVEN \n")
+			.append("    void testGetAllViewWith1Result() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View);\n")
 			.append("        List<").append(className).append("ViewDto> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
@@ -1537,7 +1534,7 @@ public class JavaClassGeneratorService {
 			controllerTest.append(")).thenReturn(").append(lowerClassName).append("Views);\n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(").append(lowerClassName).append("ViewDtos);\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(");
+			.append(lowerClassName).append("ControllerRest.getAll(");
 			if (idCompany) {
 				controllerTest.append("1, 2");
 			}
@@ -1551,7 +1548,7 @@ public class JavaClassGeneratorService {
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
-			.append("    void testGetAll").append(className).append("ViewWith2Results() {\n").append("        //GIVEN \n")
+			.append("    void testGetAllViewWith2Results() {\n").append("        //GIVEN \n")
 			.append("        List<").append(className).append("View> ").append(lowerClassName).append("Views = List.of(").append(lowerClassName).append("View,").append(lowerClassName).append("View2);\n")
 			.append("        List<").append(className).append("ViewDto> ").append(lowerClassName).append("ViewDtos = List.of(").append(lowerClassName).append("ViewDto,").append(lowerClassName).append("ViewDto2);\n")
 			.append("        when(").append(lowerClassName).append("Service.findAllView(any()");
@@ -1566,7 +1563,7 @@ public class JavaClassGeneratorService {
 					.append("ViewsTo").append(className).append("ViewDtos(any())).thenReturn(").append(lowerClassName)
 					.append("ViewDtos);\n\n").append("        //WHEN \n")
 					.append("        ResponseEntity<List<Abstract").append(className).append("Dto>> response = ")
-			.append(lowerClassName).append("ControllerRest.getAll").append(classNamePlural).append("(");
+			.append(lowerClassName).append("ControllerRest.getAll(");
 			if (idCompany) {
 				controllerTest.append("1, 2");
 			}
@@ -1580,20 +1577,20 @@ public class JavaClassGeneratorService {
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
-			.append("    void testGet").append(className).append("ViewById() {\n").append("        //GIVEN \n")
+			.append("    void testGetViewById() {\n").append("        //GIVEN \n")
 			.append("        when(").append(lowerClassName).append("ViewMapper.").append(lowerClassName).append("ViewTo").append(className).append("ViewDto(any())).thenReturn(").append(lowerClassName).append("ViewDto);\n")
 			.append("        when(").append(lowerClassName).append("Service.findViewById(anyInt())).thenReturn(Optional.of(").append(lowerClassName).append("View));\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<Abstract").append(className).append("Dto> response = ")
-			.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(1, 2, 3, \"full\");\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getById(1, 2, 3, \"full\");\n\n").append("        //THEN \n")
 			.append("        assertThat(response).usingRecursiveComparison().isNotNull()\n")
 			.append("            .isEqualTo(ResponseEntity.status(HttpStatus.OK).body(").append(lowerClassName).append("ViewDto));\n")
 			.append("    }\n\n");
 
 			controllerTest.append("    @Test\n")
-			.append("    void testGet").append(className).append("ViewById_noContent() {\n").append("        //GIVEN \n")
+			.append("    void testGetViewById_noContent() {\n").append("        //GIVEN \n")
 			.append("        when(").append(lowerClassName).append("Service.findViewById(anyInt())).thenReturn(Optional.empty());\n\n").append("        //WHEN \n")
 			.append("        ResponseEntity<Abstract").append(className).append("Dto> response = ")
-			.append(lowerClassName).append("ControllerRest.get").append(className).append("ById(404, 1, 2, \"full\");\n\n").append("        //THEN \n")
+			.append(lowerClassName).append("ControllerRest.getById(404, 1, 2, \"full\");\n\n").append("        //THEN \n")
 			.append("        assertThat(response).usingRecursiveComparison().isEqualTo(ResponseEntity.noContent().build());\n")
 			.append("    }\n\n");
 		}

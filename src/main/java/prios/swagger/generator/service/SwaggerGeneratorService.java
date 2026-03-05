@@ -20,6 +20,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
@@ -405,8 +406,8 @@ public class SwaggerGeneratorService {
 						}
 					});
 
-					// 2) Remplacer les DoubleConverter par BigDecimalConverter et DateConverter par
-					// LocalDateTimeDecimalConverter
+					// 2) Remplacer les DoubleConverter par BigDecimalConverter DateConverter par
+					// LocalDateTimeDecimalConverter et TimeConverter par LocalTimeConverter
 					field.getAnnotationByName("Convert").ifPresent(annotation -> {
 						String converter = "";
 
@@ -419,18 +420,28 @@ public class SwaggerGeneratorService {
 										compilationUnit.addImport("com.prios.core.a.util.BigDecimalConverter");
 										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
 												.equals("com.prios.tools.config.data.DoubleConverter"));
+										continue;
 									}
 									if (converter.equals("FloatConverter.class")) {
 										pair.setValue(new NameExpr("BigDecimalConverter.class"));
 										compilationUnit.addImport("com.prios.core.a.util.BigDecimalConverter");
 										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
 												.equals("com.prios.tools.config.data.FloatConverter"));
+										continue;
 									}
 									if (converter.equals("DateConverter.class")) {
 										pair.setValue(new NameExpr("LocalDateTimeConverter.class"));
 										compilationUnit.addImport("com.prios.tools.config.data.LocalDateTimeConverter");
 										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
 												.equals("com.prios.tools.config.data.DateConverter"));
+										continue;
+									}
+									if (converter.equals("TimeConverter.class")) {
+										pair.setValue(new NameExpr("LocalTimeConverter.class"));
+										compilationUnit.addImport("com.prios.tools.config.data.LocalTimeConverter");
+										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
+												.equals("com.prios.tools.config.data.TimeConverter"));
+										continue;
 									}
 									break;
 								}
@@ -442,11 +453,11 @@ public class SwaggerGeneratorService {
 					// 3) Remplacer les types Date → LocalDateTime et Double/Float → BigDecimal et
 					// Boolean → boolean
 					field.getVariables().forEach(variable -> {
-						
+
 						if (variable.getNameAsString().equals("serialVersionUID")) {
 							field.removeJavaDocComment();
 						}
-						
+
 						field.getElementType().ifClassOrInterfaceType(type -> {
 							String typeName = type.getNameAsString();
 
@@ -512,47 +523,88 @@ public class SwaggerGeneratorService {
 					return super.visit(field, arg);
 				}
 			}, null);
-			
+
 			// 4) Transformer @ApiObject(description = "...") en JavaDoc sur la classe
 			compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
-		        Optional<AnnotationExpr> apiObjectOpt = clazz.getAnnotationByName("ApiObject");
+				Optional<AnnotationExpr> apiObjectOpt = clazz.getAnnotationByName("ApiObject");
 
-		        if (apiObjectOpt.isPresent()) {
-		            AnnotationExpr apiObject = apiObjectOpt.get();
+				if (apiObjectOpt.isPresent()) {
+					AnnotationExpr apiObject = apiObjectOpt.get();
 
-		            String description = null;
+					String description = null;
 
-		            // Cas @ApiObject(name = "Food", description = "Produit - Complément aliment")
-		            if (apiObject.isNormalAnnotationExpr()) {
-		                NormalAnnotationExpr normal = apiObject.asNormalAnnotationExpr();
-		                for (MemberValuePair pair : normal.getPairs()) {
-		                    if ("description".equals(pair.getNameAsString())
-		                            && pair.getValue().isStringLiteralExpr()) {
-		                        description = pair.getValue().asStringLiteralExpr().asString();
-		                        break;
-		                    }
-		                }
-		            }
+					// Cas @ApiObject(name = "Food", description = "Produit - Complément aliment")
+					if (apiObject.isNormalAnnotationExpr()) {
+						NormalAnnotationExpr normal = apiObject.asNormalAnnotationExpr();
+						for (MemberValuePair pair : normal.getPairs()) {
+							if ("description".equals(pair.getNameAsString()) && pair.getValue().isStringLiteralExpr()) {
+								description = pair.getValue().asStringLiteralExpr().asString();
+								break;
+							}
+						}
+					}
 
-		            // Cas @ApiObject("...") ou autre forme single-member (peu probable ici)
-		            if (description == null && apiObject.isSingleMemberAnnotationExpr()) {
-		                Expression value = apiObject.asSingleMemberAnnotationExpr().getMemberValue();
-		                if (value.isStringLiteralExpr()) {
-		                    description = value.asStringLiteralExpr().asString();
-		                }
-		            }
+					// Cas @ApiObject("...") ou autre forme single-member (peu probable ici)
+					if (description == null && apiObject.isSingleMemberAnnotationExpr()) {
+						Expression value = apiObject.asSingleMemberAnnotationExpr().getMemberValue();
+						if (value.isStringLiteralExpr()) {
+							description = value.asStringLiteralExpr().asString();
+						}
+					}
 
-		            // Si on a réussi à récupérer une description, on la met en JavaDoc
-		            if (description != null && !description.isBlank()) {
-		                // Remplace la JavaDoc existante si elle existe
+					// Si on a réussi à récupérer une description, on la met en JavaDoc
+					if (description != null && !description.isBlank()) {
+						// Remplace la JavaDoc existante si elle existe
 						clazz.setJavadocComment(new JavadocComment(description));
-		            }
+					}
 
-		            // Supprimer l'annotation @ApiObject
-		            clazz.getAnnotations().remove(apiObject);
-		        }
-		    });
+					// Supprimer l'annotation @ApiObject
+					clazz.getAnnotations().remove(apiObject);
+				}
+			});
+			// 5) Supprimer @Data et mettre @Getter et @Setter
+			compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+				Optional<AnnotationExpr> dataOpt = clazz.getAnnotationByName("Data");
 
+			    if (dataOpt.isPresent()) {
+
+			    	AnnotationExpr dataAnnotation = dataOpt.get();
+
+			    	// Trouver sa position dans la liste des annotations
+			    	NodeList<AnnotationExpr> annotations = clazz.getAnnotations();
+			    	int dataIndex = annotations.indexOf(dataAnnotation);
+
+			    	// Supprimer @Data
+			    	annotations.remove(dataAnnotation);
+
+			    	// Ajouter @Getter et @Setter à la même position
+			    	if (!clazz.getAnnotationByName("Getter").isPresent()) {
+			    	    annotations.add(dataIndex++, new MarkerAnnotationExpr("Getter"));
+			    	}
+
+			    	if (!clazz.getAnnotationByName("Setter").isPresent()) {
+			    	    annotations.add(dataIndex, new MarkerAnnotationExpr("Setter"));
+			    	}
+
+			    	// Gestion des imports
+			    	if (compilationUnit.getImports().stream()
+			    	        .noneMatch(i -> i.getNameAsString().equals("lombok.Getter"))) {
+			    	    compilationUnit.addImport("lombok.Getter");
+			    	}
+
+			    	if (compilationUnit.getImports().stream()
+			    	        .noneMatch(i -> i.getNameAsString().equals("lombok.Setter"))) {
+			    	    compilationUnit.addImport("lombok.Setter");
+			    	}
+			    }
+			});			
+
+			compilationUnit.getImports().removeIf(i -> {
+				String name = i.getNameAsString();
+				return name.equals("org.jsondoc.core.annotation.ApiObject")
+						|| name.equals("org.jsondoc.core.annotation.ApiObjectField") || name.equals("lombok.Data");
+			});
+			
 			return compilationUnit.toString();
 
 		} catch (Exception e) {
@@ -562,10 +614,10 @@ public class SwaggerGeneratorService {
 	}
 
 	public String replaceAttributeOverrides(String javaClassContent) {
-		CompilationUnit cu = StaticJavaParser.parse(javaClassContent);
+		CompilationUnit compilationUnit = StaticJavaParser.parse(javaClassContent);
 		
 	    // 1) Traitement des @AttributeOverrides au niveau des classes
-		cu.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+		compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
 			List<AnnotationExpr> toAdd = new ArrayList<>();
 			List<AnnotationExpr> toRemove = new ArrayList<>();
 
@@ -609,7 +661,7 @@ public class SwaggerGeneratorService {
 		});
 		
 		// 2) Suppression de la Javadoc sur les champs serialVersionUID
-	    cu.findAll(FieldDeclaration.class).forEach(field -> {
+		compilationUnit.findAll(FieldDeclaration.class).forEach(field -> {
 	        boolean hasSerialVersionUID = field.getVariables().stream()
 	                .anyMatch(v -> "serialVersionUID".equals(v.getNameAsString()));
 
@@ -617,8 +669,72 @@ public class SwaggerGeneratorService {
 	            field.removeJavaDocComment(); // enlève la Javadoc si présente
 	        }
 	    });
-	    
-		return cu.toString();
+		// 3) Remplacer @Entity() par @Entity
+		compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+		    clazz.getAnnotationByName("Entity").ifPresent(annotation -> {
+		        // Si c'est une annotation normale sans paramètres → @Entity()
+		        if (annotation.isNormalAnnotationExpr()) {
+		            NormalAnnotationExpr normal = annotation.asNormalAnnotationExpr();
+		            if (normal.getPairs().isEmpty()) {
+		                // Remplacer par une MarkerAnnotationExpr
+		                MarkerAnnotationExpr marker = 
+		                        new MarkerAnnotationExpr("Entity");
+		                annotation.replace(marker);
+		            }
+		        }
+		    });
+		});
+		// 4) Supprimer @ApiObject
+		compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+			Optional<AnnotationExpr> apiObjectOpt = clazz.getAnnotationByName("ApiObject");
+
+			apiObjectOpt.ifPresent(clazz::remove);
+		});
+
+		// 5) Supprimer @Data et mettre @Getter et @Setter
+		compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+			Optional<AnnotationExpr> dataOpt = clazz.getAnnotationByName("Data");
+
+			if (dataOpt.isPresent()) {
+
+				AnnotationExpr dataAnnotation = dataOpt.get();
+
+				// Trouver sa position dans la liste des annotations
+				NodeList<AnnotationExpr> annotations = clazz.getAnnotations();
+				int dataIndex = annotations.indexOf(dataAnnotation);
+
+				// Supprimer @Data
+				annotations.remove(dataAnnotation);
+
+				// Ajouter @Getter et @Setter à la même position
+				if (!clazz.getAnnotationByName("Getter").isPresent()) {
+					annotations.add(dataIndex++, new MarkerAnnotationExpr("Getter"));
+				}
+
+				if (!clazz.getAnnotationByName("Setter").isPresent()) {
+					annotations.add(dataIndex, new MarkerAnnotationExpr("Setter"));
+				}
+
+				// Gestion des imports
+				if (compilationUnit.getImports().stream().noneMatch(i -> i.getNameAsString().equals("lombok.Getter"))) {
+					compilationUnit.addImport("lombok.Getter");
+				}
+
+				if (compilationUnit.getImports().stream().noneMatch(i -> i.getNameAsString().equals("lombok.Setter"))) {
+					compilationUnit.addImport("lombok.Setter");
+				}
+			}
+		});
+		
+		
+
+		compilationUnit.getImports().removeIf(i -> {
+			String name = i.getNameAsString();
+			return name.equals("org.jsondoc.core.annotation.ApiObject")
+					|| name.equals("javax.persistence.AttributeOverrides") || name.equals("lombok.Data");
+		});
+
+		return compilationUnit.toString();
 	}
 
 	private String toCamelCase(String className) {
