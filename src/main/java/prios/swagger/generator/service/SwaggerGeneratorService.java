@@ -449,6 +449,25 @@ public class SwaggerGeneratorService {
 						}
 
 					});
+					
+					// Remplacer @Type(type = "ouiNonType") par @Convert(converter = OuiNonBooleanConverter.class)
+					field.getAnnotationByName("Type").ifPresent(annotation -> {
+						NormalAnnotationExpr convertAnnotation = new NormalAnnotationExpr();
+					    convertAnnotation.setName("Convert");
+					    convertAnnotation.addPair("converter", "OuiNonBooleanConverter.class");
+
+					    field.getAnnotations().add(convertAnnotation);
+
+					    if (compilationUnit.getImports().stream()
+				    	        .noneMatch(i -> i.getNameAsString().equals("com.prios.tools.config.data.OuiNonBooleanConverter"))) {
+				    	    compilationUnit.addImport("com.prios.tools.config.data.OuiNonBooleanConverter");
+				    	}if (compilationUnit.getImports().stream()
+				    	        .noneMatch(i -> i.getNameAsString().equals("jakarta.persistence.Convert"))) {
+				    	    compilationUnit.addImport("jakarta.persistence.Convert");
+				    	}
+					    field.getAnnotations().remove(annotation);
+
+					});
 
 					// 3) Remplacer les types Date → LocalDateTime et Double/Float → BigDecimal et
 					// Boolean → boolean
@@ -523,6 +542,7 @@ public class SwaggerGeneratorService {
 					return super.visit(field, arg);
 				}
 			}, null);
+					
 
 			// 4) Transformer @ApiObject(description = "...") en JavaDoc sur la classe
 			compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
@@ -597,12 +617,27 @@ public class SwaggerGeneratorService {
 			    	    compilationUnit.addImport("lombok.Setter");
 			    	}
 			    }
-			});			
+			});				
+			// 6) Supprimer @TypeDef
+			compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(clazz -> {
+				Optional<AnnotationExpr> dataOpt = clazz.getAnnotationByName("TypeDef");
+
+			    if (dataOpt.isPresent()) {
+
+			    	AnnotationExpr dataAnnotation = dataOpt.get();
+			    	NodeList<AnnotationExpr> annotations = clazz.getAnnotations();
+
+			    	annotations.remove(dataAnnotation);
+			    }
+			});				
 
 			compilationUnit.getImports().removeIf(i -> {
 				String name = i.getNameAsString();
 				return name.equals("org.jsondoc.core.annotation.ApiObject")
-						|| name.equals("org.jsondoc.core.annotation.ApiObjectField") || name.equals("lombok.Data");
+						|| name.equals("org.jsondoc.core.annotation.ApiObjectField") || name.equals("lombok.Data")
+						|| name.equals("org.hibernate.annotations.Type")
+						|| name.equals("org.hibernate.annotations.TypeDef")
+						|| name.equals("com.prios.tools.config.data.OuiNonType");
 			});
 			
 			return compilationUnit.toString();

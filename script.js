@@ -36,6 +36,7 @@ function generateSwagger() {
 			document.getElementById("status").style.color = "green";
 			// Masquer le loader
 			document.getElementById("loading").style.display = "none";
+			document.getElementById("javaClassInput").value = ""; // Effacer le textarea après la génération
 		})
 		.catch(error => {
 			document.getElementById("status").textContent = "❌ Erreur : " + error.message;
@@ -173,6 +174,49 @@ function generateExcel() {
 	            document.getElementById("loadingExcel").style.display = "none"; // Masquer le loader en cas d'erreur
 	        });
 }
+
+
+function generateJdbi() {
+	let classContent = document.getElementById("jdbiJavaClassInput").value;
+	if (!classContent.trim()) {
+		alert("Veuillez coller votre class");
+		return;
+	}
+
+	// Afficher le loader avant l'appel à fetch
+	document.getElementById("loadingJdbi").style.display = "block";
+	document.getElementById("statusJdbi").textContent = ""; // Effacer tout message précédent
+
+	fetch("http://localhost:8091/api/jdbi/generate", {
+			method: "POST",
+			headers: { "Content-Type": "text/plain" },
+			body: classContent
+		})
+			.then(response => {
+				if (response.ok) {
+					return response.text(); // Lire la réponse JSON
+				}
+				return response.text().then(err => { // Lire l'erreur envoyée par le serveur
+					throw new Error(err.error || 'Erreur lors de la génération');
+				});
+			})
+			.then(data => {	
+				document.getElementById("generatedJdbi").textContent = data;
+		        Prism.highlightAll();
+
+				// Afficher le message de succès
+				document.getElementById("statusJdbi").textContent = "✅ Swagger généré avec succès : " + nameSwaggerYaml;
+				document.getElementById("statusJdbi").style.color = "green";
+				// Masquer le loader
+				document.getElementById("loadingJdbi").style.display = "none";
+			})
+			.catch(error => {
+				document.getElementById("statusJdbi").textContent = "❌ Erreur : " + error.message;
+				document.getElementById("statusJdbi").style.color = "red";
+				document.getElementById("loadingJdbi").style.display = "none"; // Masquer le loader en cas d'erreur
+			});
+}
+
 
 function switchSection(evt, sectionId) {
 	let sections = document.getElementsByClassName("content-section");
