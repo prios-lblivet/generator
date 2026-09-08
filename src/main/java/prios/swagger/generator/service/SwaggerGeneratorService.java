@@ -278,11 +278,15 @@ public class SwaggerGeneratorService {
 					+ "\n          multipleOf: " + multipleOf + "\n";
 			break;
 		case "Date":
-			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00'\n          description: "
 					+ description + "\n          format: date-time\n";
 			break;
+		case "LocalDate":
+			swaggerProperty += "          type: string\n          example: '2025-03-19'\n          description: "
+					+ description + "\n          format: date\n";
+			break;
 		case "LocalDateTime":
-			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00'\n          description: "
 					+ description + "\n          format: date-time\n";
 			break;
 		case "boolean":
@@ -429,20 +433,20 @@ public class SwaggerGeneratorService {
 												.equals("com.prios.tools.config.data.FloatConverter"));
 										continue;
 									}
-									if (converter.equals("DateConverter.class")) {
-										pair.setValue(new NameExpr("LocalDateTimeConverter.class"));
-										compilationUnit.addImport("com.prios.tools.config.data.LocalDateTimeConverter");
-										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
-												.equals("com.prios.tools.config.data.DateConverter"));
-										continue;
-									}
-									if (converter.equals("TimeConverter.class")) {
-										pair.setValue(new NameExpr("LocalTimeConverter.class"));
-										compilationUnit.addImport("com.prios.tools.config.data.LocalTimeConverter");
-										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
-												.equals("com.prios.tools.config.data.TimeConverter"));
-										continue;
-									}
+//									if (converter.equals("DateConverter.class")) {
+//										pair.setValue(new NameExpr("LocalDateTimeConverter.class"));
+//										compilationUnit.addImport("com.prios.tools.config.data.LocalDateTimeConverter");
+//										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
+//												.equals("com.prios.tools.config.data.DateConverter"));
+//										continue;
+//									}
+//									if (converter.equals("TimeConverter.class")) {
+//										pair.setValue(new NameExpr("LocalTimeConverter.class"));
+//										compilationUnit.addImport("com.prios.tools.config.data.LocalTimeConverter");
+//										compilationUnit.getImports().removeIf(i -> i.getNameAsString()
+//												.equals("com.prios.tools.config.data.TimeConverter"));
+//										continue;
+//									}
 									break;
 								}
 							}
@@ -484,12 +488,12 @@ public class SwaggerGeneratorService {
 							case "Boolean":
 								type.setName("boolean");
 								break;
-							case "Date":
-								type.setName("LocalDateTime");
-								compilationUnit.addImport("java.time.LocalDateTime");
-								compilationUnit.getImports()
-										.removeIf(i -> i.getNameAsString().equals("java.util.Date"));
-								break;
+//							case "Date":
+//								type.setName("LocalDateTime");
+//								compilationUnit.addImport("java.time.LocalDateTime");
+//								compilationUnit.getImports()
+//										.removeIf(i -> i.getNameAsString().equals("java.util.Date"));
+//								break;
 							case "Double":
 							case "Float":
 							case "BigDecimal":
@@ -525,8 +529,8 @@ public class SwaggerGeneratorService {
 									columnAnnotation.setPairs(pairs);
 									field.addAnnotation(columnAnnotation);
 
-									// S'assurer que l'import de javax.persistence.Column est présent
-									compilationUnit.addImport("javax.persistence.Column");
+									// S'assurer que l'import de jakarta.persistence.Column est présent
+									compilationUnit.addImport("jakarta.persistence.Column");
 								}
 
 								type.setName("BigDecimal");

@@ -283,6 +283,14 @@
 			color: #007bff;
 		}
 
+		#loadingError {
+			display: none;
+			margin-top: 15px;
+			font-size: 16px;
+			font-weight: bold;
+			color: #007bff;
+		}
+
 		.loader {
 			border: 4px solid #f3f3f3;
 			border-top: 4px solid #007bff;
@@ -332,16 +340,16 @@
 		#dropZone.dragover {
 			background-color: #d3e3fd;
 		}
-		
+
 		.code-block-container {
-		  position: relative;
-		  flex: 1;
-		  min-height: 20vh;
-		  max-height: 60vh;
-		  overflow-x: auto;
-		  overflow-y: auto;
+			position: relative;
+			flex: 1;
+			min-height: 20vh;
+			max-height: 60vh;
+			overflow-x: auto;
+			overflow-y: auto;
 		}
-		
+
 		.copy-btn {
 			position: absolute;
 			top: 18px;
@@ -397,7 +405,7 @@
 			height: 88%;
 			gap: 15px;
 		}
-		
+
 		/* === Ajustement pour que les textareas occupent tout l’espace restant === */
 		.textareas {
 			gap: 10px;
@@ -414,12 +422,222 @@
 			width: 50%;
 			box-sizing: border-box;
 		}
-		
+
 		input[type="checkbox"] {
-		  accent-color: #228B22; /* bleu vif, tu peux changer la couleur */
-		  cursor: pointer;
+			accent-color: #228B22;
+			/* bleu vif, tu peux changer la couleur */
+			cursor: pointer;
 		}
 
+		#error_result table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 15px;
+			font-family: Arial, sans-serif;
+			font-size: 14px;
+		}
+
+		#error_result th {
+			border: 1px solid #ddd;
+			color: #294471;
+			padding: 8px;
+			text-align: center;
+		}
+
+		#error_result td {
+			border: 1px solid #ddd;
+			padding: 8px;
+			vertical-align: top;
+		}
+
+		#error_result tr:nth-child(even) {
+			background-color: #f8f9fa;
+		}
+
+		#error_result tr:hover {
+			background-color: #eef5ff;
+		}
+
+
+		/* === recherche error css === */
+		/* Positionnement de l'aide en haut à droite */
+		#error-section {
+		    position: relative;
+		}
+
+		.error-info-tooltip {
+		    position: absolute;
+		    top: 12px;
+		    right: 16px;
+		    z-index: 1000;
+		}
+
+		/* Petit bouton info */
+		.info-button {
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+
+		    width: 28px;
+		    height: 28px;
+
+		    padding: 0;
+		    border: 0;
+
+		    background: transparent;
+		    color: #64748b;
+
+		    cursor: pointer;
+		}
+
+		.info-button svg {
+		    width: 21px;
+		    height: 21px;
+
+		    fill: none;
+		    stroke: currentColor;
+		    stroke-width: 1.8;
+		    stroke-linecap: round;
+		    stroke-linejoin: round;
+
+		    transition: color 0.2s ease, transform 0.2s ease;
+		}
+
+		.info-button .info-dot {
+		    fill: currentColor;
+		    stroke: none;
+		}
+
+		.info-button:hover {
+		    color:  rgb(41, 68, 113);;
+		}
+
+		.info-button:hover svg {
+		    transform: scale(1.08);
+		}
+
+		/* Carte du tooltip */
+		.tooltip-content {
+		    display: none;
+
+		    position: absolute;
+		    top: 38px;
+		    right: 0;
+
+		    width: 480px;
+
+		    padding: 18px;
+
+		    background: #ffffff;
+		    border: 1px solid #e2e8f0;
+		    border-radius: 12px;
+
+		    box-shadow:
+		        0 10px 25px rgba(15, 23, 42, 0.10),
+		        0 3px 8px rgba(15, 23, 42, 0.06);
+
+		    animation: tooltipFade 0.15s ease-out;
+		}
+
+		/* Petite flèche */
+		.tooltip-content::before {
+		    content: "";
+
+		    position: absolute;
+		    top: -7px;
+		    right: 8px;
+
+		    width: 12px;
+		    height: 12px;
+
+		    background: white;
+
+		    border-left: 1px solid #e2e8f0;
+		    border-top: 1px solid #e2e8f0;
+
+		    transform: rotate(45deg);
+		}
+
+		/* Affichage */
+		.error-info-tooltip:hover .tooltip-content {
+		    display: block;
+		}
+
+		/* Header */
+		.tooltip-header {
+		    display: flex;
+		    align-items: center;
+		    justify-content: space-between;
+
+		    margin-bottom: 12px;
+		}
+
+		.tooltip-title {
+		    font-size: 14px;
+		    font-weight: 600;
+		    color: #1e293b;
+		}
+
+		/* Bloc properties */
+		.tooltip-content pre {
+		    margin: 0;
+
+		    padding: 10px 11px;
+
+		    background: #f8fafc;
+		    border: 1px solid #e2e8f0;
+		    border-radius: 8px;
+
+		    color: #334155;
+
+		    font-family: "Consolas", "Monaco", monospace;
+		    font-size: 12px;
+		    line-height: 1.7;
+
+		    white-space: pre-wrap;
+			text-align: left;
+		}
+
+		/* Bouton copier */
+		.copy-button {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px;
+
+		    padding: 6px 10px;
+
+		    border: 1px solid #e2e8f0;
+		    border-radius: 7px;
+
+		    background: #ffffff;
+		    color: #475569;
+
+		    font-size: 12px;
+		    font-weight: 500;
+
+		    cursor: pointer;
+
+		    transition: all 0.2s ease;
+		}
+
+		.copy-button:hover {
+		    background: #f8fafc;
+		    border-color: #cbd5e1;
+		    color: #2563eb;
+		}
+
+		/* Animation */
+		@keyframes tooltipFade {
+		    from {
+		        opacity: 0;
+		        transform: translateY(-4px);
+		    }
+
+		    to {
+		        opacity: 1;
+		        transform: translateY(0);
+		    }
+		}
 	</style>
 </head>
 
@@ -428,18 +646,21 @@
 	<nav>
 		<div class="logo">
 			<img src="https://www.prios.fr/wp-content/uploads/2020/07/pr_logo_priosblue-04-150x23.png" alt="Logo">
-			</div>
-			<ul class="menu">
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')">Générateur nouvelle entité</a></li>
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de
-						swagger</a></li>
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'javaClass-section')" class="active">Générateur java</a></li>
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
-				<li><a href="javascript:void(0);" onclick="switchSection(event, 'jdbi-section')">Générateur JDBI</a></li>
-			</ul>
-			</nav>
-			<div class="container">
+		</div>
+		<ul class="menu">
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'java-section')">Générateur nouvelle
+					entité</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'swagger-section')">Générateur de
+					swagger</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'javaClass-section')"
+					class="active">Générateur java</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'test-section')">Générateur de test</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'excel-section')">Générateur Excel</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'jdbi-section')">Générateur JDBI</a></li>
+			<li><a href="javascript:void(0);" onclick="switchSection(event, 'error-section')">Recherche erreur</a></li>
+		</ul>
+	</nav>
+	<div class="container">
 
 		<div id="swagger-section" class="content-section">
 			<div class="tabs">
@@ -561,57 +782,62 @@
 			<div class="height">
 				<div class="container-flex">
 					<div id="javaClass_import" class="tab-content active">
-						<div class="param-buttons" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between;">
-						  <div style="display: flex; gap: 10px; align-items: center;">
-						    <label>
-						      <input type="checkbox" id="deleteRecord" checked> deleteRecord
-						    </label>
-						    <label>
-						      <input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
-						    </label>
-						  </div>
-						  <div style="display: flex; gap: 10px; align-items: center;">
-							<label style="color: rgb(41, 68, 113);">
-								Méthodes REST à générer :
-							</label>
-						    <label>
-						      <input type="checkbox" id="postAll"> postAll
-						    </label>
-						    <label>
-						      <input type="checkbox" id="putAll"> putAll
-						    </label>
-						    <label>
-						      <input type="checkbox" id="patchById"> patchById
-						    </label>
-						    <label>
-						      <input type="checkbox" id="deleteAll"> deleteAll
-						    </label>
-						  </div>
+						<div class="param-buttons"
+							style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between;">
+							<div style="display: flex; gap: 10px; align-items: center;">
+								<label>
+									<input type="checkbox" id="deleteRecord" checked> deleteRecord
+								</label>
+								<label>
+									<input type="checkbox" id="idCompany" checked> idCompany/idEstablishment
+								</label>
+							</div>
+							<div style="display: flex; gap: 10px; align-items: center;">
+								<label style="color: rgb(41, 68, 113);">
+									Méthodes REST à générer :
+								</label>
+								<label>
+									<input type="checkbox" id="postAll"> postAll
+								</label>
+								<label>
+									<input type="checkbox" id="putAll"> putAll
+								</label>
+								<label>
+									<input type="checkbox" id="patchById"> patchById
+								</label>
+								<label>
+									<input type="checkbox" id="deleteAll"> deleteAll
+								</label>
+							</div>
 						</div>
-		
+
 						<!-- Textareas pour les classes -->
 						<div class="textareas">
 							<textarea id="javaClassInputMain" placeholder="Collez votre classe"></textarea>
-							<textarea id="javaClassInputSecondary" placeholder="Collez votre vue si vous en avez une"></textarea>
+							<textarea id="javaClassInputSecondary"
+								placeholder="Collez votre vue si vous en avez une"></textarea>
 						</div>
-		
+
 						<!-- Boutons et status -->
 						<div class="buttons" style="margin-top: 10px;">
 							<button id="generateJavaClass" class="button" onclick="generateJavaClass()">🚀 Générer les
 								class</button>
-							<p id="loadingJavaClassImport" style="display: none;"><span class="loader"></span> Génération en
+							<p id="loadingJavaClassImport" style="display: none;"><span class="loader"></span>
+								Génération en
 								cours...</p>
 							<p id="statusJavaClassImport"></p>
 						</div>
 					</div>
-					<div id="javaClass_mapper" class="tab-content">					
-						<div class="code-container" style="display: flex; gap: 20px;">		
-					    	<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapper', this)">Copier</button>
+					<div id="javaClass_mapper" class="tab-content">
+						<div class="code-container" style="display: flex; gap: 20px;">
+							<div class="code-block-container">
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassMapper', this)">Copier</button>
 								<pre><code id="generatedJavaClassMapper" class="code-block language-java">En attente de la génération du mapper...</code></pre>
 							</div>
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperTest', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassMapperTest', this)">Copier</button>
 								<pre><code id="generatedJavaClassMapperTest" class="code-block language-java">En attente de la génération du test...</code></pre>
 							</div>
 						</div>
@@ -619,31 +845,37 @@
 					<div id="javaClass_mapper_view" class="tab-content">
 						<div class="code-container" style="display: flex; gap: 20px;">
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperView', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassMapperView', this)">Copier</button>
 								<pre><code id="generatedJavaClassMapperView" class="code-block language-java">En attente de la génération du mapper vue...</code></pre>
-							</div>						
+							</div>
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassMapperViewTest', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassMapperViewTest', this)">Copier</button>
 								<pre><code id="generatedJavaClassMapperViewTest" class="code-block language-java">En attente de la génération du test...</code></pre>
 							</div>
 						</div>
 					</div>
 					<div id="javaClass_repository" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassRepository', this)">Copier</button>
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedJavaClassRepository', this)">Copier</button>
 						<pre><code id="generatedJavaClassRepository" class="code-block language-java">En attente de la génération du repository...</code></pre>
-					</div>	
+					</div>
 					<div id="javaClass_service" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassService', this)">Copier</button>
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedJavaClassService', this)">Copier</button>
 						<pre><code id="generatedJavaClassService" class="code-block language-java">En attente de la génération du service...</code></pre>
-					</div>					
+					</div>
 					<div id="javaClass_serviceImpl" class="tab-content">
 						<div class="code-container" style="display: flex; gap: 20px;">
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImpl', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassServiceImpl', this)">Copier</button>
 								<pre><code id="generatedJavaClassServiceImpl" class="code-block language-java">En attente de la génération du serviceImpl...</code></pre>
 							</div>
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassServiceImplTest', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassServiceImplTest', this)">Copier</button>
 								<pre><code id="generatedJavaClassServiceImplTest" class="code-block language-java">En attente de la génération du test...</code></pre>
 							</div>
 						</div>
@@ -651,21 +883,25 @@
 					<div id="javaClass_controller" class="tab-content">
 						<div class="code-container" style="display: flex; gap: 20px;">
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassController', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassController', this)">Copier</button>
 								<pre><code id="generatedJavaClassController" class="code-block language-java">En attente de la génération du controller...</code></pre>
 							</div>
 							<div class="code-block-container">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassControllerTest', this)">Copier</button>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJavaClassControllerTest', this)">Copier</button>
 								<pre><code id="generatedJavaClassControllerTest" class="code-block language-java">En attente de la génération du test...</code></pre>
 							</div>
 						</div>
 					</div>
 					<div id="javaClass_swagger" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassSwagger', this)">Copier</button>
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedJavaClassSwagger', this)">Copier</button>
 						<pre><code id="generatedJavaClassSwagger" class="code-block language-yaml">En attente de la génération du swagger...</code></pre>
 					</div>
 					<div id="javaClass_feign" class="tab-content">
-						<button class="copy-btn" onclick="copyToClipboard('generatedJavaClassFeign', this)">Copier</button>
+						<button class="copy-btn"
+							onclick="copyToClipboard('generatedJavaClassFeign', this)">Copier</button>
 						<pre><code id="generatedJavaClassFeign" class="code-block language-java">En attente de la génération du feign...</code></pre>
 					</div>
 				</div>
@@ -697,7 +933,8 @@
 						<!-- Textareas pour les classes -->
 						<div class="textareas">
 							<textarea id="javaInputMain" placeholder="Collez votre classe"></textarea>
-							<textarea id="javaInputSecondary" placeholder="Collez votre vue si vous en avez une"></textarea>
+							<textarea id="javaInputSecondary"
+								placeholder="Collez votre vue si vous en avez une"></textarea>
 						</div>
 
 						<!-- Boutons et status -->
@@ -751,7 +988,8 @@
 							<textarea id="excelJavaTableInput" placeholder="Collez ici votre class table..."></textarea>
 						</div>
 						<div class="buttons">
-							<button id="generateTest" class="button" onclick="generateExcel()">🚀 Générer le excels</button>
+							<button id="generateTest" class="button" onclick="generateExcel()">🚀 Générer le
+								excels</button>
 							<p id="loadingExcel"><span class="loader"></span> Génération en cours...</p>
 							<p id="statusExcel"></p>
 						</div>
@@ -763,7 +1001,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div id="jdbi-section" class="content-section">
 			<div class="tabs">
 				<div class="tab">Import</div>
@@ -773,20 +1011,73 @@
 				<div class="container-flex">
 					<div id="excel_import" class="tab-content active">
 
-						<div class="code-container" style="display: flex; gap: 20px; height: 100%">		
+						<div class="code-container" style="display: flex; gap: 20px; height: 100%">
 							<div style="flex: 1; height: 95%">
-								<textarea id="jdbiJavaClassInput" placeholder="Collez ici votre class table..."></textarea>
+								<textarea id="jdbiJavaClassInput"
+									placeholder="Collez ici votre class table..."></textarea>
 							</div>
 							<div class="code-block-container" style="flex: 1; height: 100%">
-								<button class="copy-btn" onclick="copyToClipboard('generatedJdbi', this)">Copier</button>
-								<pre style="height: 100%;"><code id="generatedJdbi" class="code-block language-java" >En attente de la génération du jdbi...</code></pre>
+								<button class="copy-btn"
+									onclick="copyToClipboard('generatedJdbi', this)">Copier</button>
+								<pre
+									style="height: 100%;"><code id="generatedJdbi" class="code-block language-java" >En attente de la génération du jdbi...</code></pre>
 							</div>
 						</div>
 						<div class="buttons">
-							<button id="generateJdbi" class="button" onclick="generateJdbi()">🚀 Générer le jdbi </button>
+							<button id="generateJdbi" class="button" onclick="generateJdbi()">🚀 Générer le jdbi
+							</button>
 							<p id="loadingJdbi"><span class="loader"></span> Génération en cours...</p>
 							<p id="statusJdbi"></p>
 						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="error-section" class="content-section"> <!-- Info-bulle en haut à droite -->
+			<div class="error-info-tooltip">
+				<button class="info-button" type="button" aria-label="Informations">
+				    <svg viewBox="0 0 24 24" aria-hidden="true">
+				        <circle cx="12" cy="12" r="9"></circle>
+				        <path d="M12 10.5V16"></path>
+				        <circle cx="12" cy="7.5" r="0.7" class="info-dot"></circle>
+				    </svg>
+				</button>
+				<div class="tooltip-content">
+					<div class="tooltip-header">
+						<strong>À mettre dans le properties pour afficher les logs BDD</strong>
+
+						<button class="copy-button" type="button" onclick="copyHibernateProperties()">
+							Copier
+						</button>
+					</div>
+
+					<pre id="hibernateProperties">logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.orm.jdbc.bind=TRACE
+logging.file.name=logs/api.log</pre>
+				</div>
+			</div>
+			<div class="tabs">
+				<div class="tab active" onclick="openTab(event, 'error_import')">Import</div>
+				<div class="tab" onclick="openTab(event, 'error_result')">Résultat</div>
+
+			</div>
+
+			<div class="height">
+				<div class="container-flex">
+					<div id="error_import" class="tab-content active">
+						<div class="api-import">
+							<textarea id="errorLogInput" placeholder="Collez ici les logs..."></textarea>
+							<textarea id="errorTableInput"
+								placeholder="Collez ici la creation bdd de la table..."></textarea>
+						</div>
+						<div class="buttons">
+							<button id="searchError" class="button" onclick="searchError()">🚀 Recherche
+								d'erreurs</button>
+							<p id="loadingError"><span class="loader"></span> Génération en cours...</p>
+							<p id="statusError"></p>
+						</div>
+					</div>
+					<div id="error_result" class="tab-content">
 					</div>
 				</div>
 			</div>

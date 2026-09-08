@@ -23,5 +23,7 @@ class JdbiController {
     @PostMapping(value = "/generate", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String generateJdbi(@RequestBody String javaClassContent) {
 	    return jdbiGeneratorService.generateJdbi(javaClassContent);
+	    //return jdbiGeneratorService.generateSQL(javaClassContent);
+    	//return jdbiGeneratorService.convertDoubleSettersToBigDecimal(javaClassContent);
 	}
 }

@@ -17,6 +17,7 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.javadoc.Javadoc;
 
 @Service
@@ -215,7 +216,7 @@ public class JavaClassGeneratorService {
 				.append("Dto;\n\n");
 
 		// ✅ Déclaration interface
-		mapperBuilder.append("@Mapper\n").append("public interface ").append(className).append("Mapper {\n\n");
+		mapperBuilder.append("@Mapper(componentModel = \"spring\", uses = StringTrimmer.class)\n").append("public interface ").append(className).append("Mapper {\n\n");
 
 		// ✅ Méthodes de mapping
 		mapperBuilder.append("    List<").append(entityName).append("> ").append(lowerClassName).append("DtosTo")
@@ -1735,12 +1736,13 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
     	String fieldName = field.getVariables().get(0).getNameAsString();
     	String capitalizedFieldName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
         String fieldType = field.getElementType().asString();
+        String lowerFieldType = fieldType.substring(0, 1).toLowerCase() + fieldType.substring(1);
         String entity = "";
         String dto = "";
         
         // Vérifier les annotations sur le champ
         int maxLength = 255;  // Valeur par défaut pour le maxLength
-        int maxDigits = 1;
+        int maxDigits = 10;
         int maxFractionDigits = 1;
         
         for (AnnotationExpr annotation : field.getAnnotations()) {
@@ -1767,7 +1769,23 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
                         }
                     }
                 }
+
+				// Vérifier l'annotation @Max pour le maximum
+				if ("Max".equals(normalAnnotation.getNameAsString())) {
+					for (MemberValuePair pair : normalAnnotation.getPairs()) {
+						if ("value".equals(pair.getNameAsString())) {
+							maxDigits = Integer.parseInt(pair.getValue().toString());
+						}
+					}
+				}
             }
+
+			
+			else if (annotation instanceof SingleMemberAnnotationExpr single) {
+		        if ("Max".equals(annotation.getNameAsString())) {
+		        	maxDigits = Integer.parseInt(single.getMemberValue().toString());
+		        }
+		    }
         }
         
         switch (fieldType) {
@@ -1776,7 +1794,7 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + randomLong + "L);\n";
                 break;
-            case "Integer":
+            case "Integer", "int":
             	Integer randomInt = ThreadLocalRandom.current().nextInt(0, maxDigits);
             	if (fieldName.equals("id") && number.equals("")) {
             		randomInt = 8;
@@ -1803,6 +1821,16 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
             	entity += "		" + className + number + ".set" + capitalizedFieldName + "(date);\n";
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(localDateTime);\n";
                 break;
+            case "LocalDate":
+            	int yearLocal = 2025;
+            	if (fieldName.toLowerCase().contains("end")) {
+            		yearLocal = 2026;
+            	}
+            	int monthLocal = ThreadLocalRandom.current().nextInt(1, 13);
+            	int dayLocal = ThreadLocalRandom.current().nextInt(1, 28);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", " + monthLocal + ", " + dayLocal + "));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", " + monthLocal + ", " + dayLocal + "));\n";
+                break;
             case "LocalDateTime":
             	int year = 2025;
             	if (fieldName.toLowerCase().contains("end")) {
@@ -1827,8 +1855,8 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
             	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(historyManagementADto);\n";
                 break;
             default:
-            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(new " + fieldType + "());\n";
-            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(new " + fieldType + "Dto());\n";
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(" + lowerFieldType + ");\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(" + lowerFieldType + "Dto);\n";
                 break;
         }
         Map<String, String> result = new HashMap<>();
@@ -1904,10 +1932,16 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 		String description = null; // Initialiser la description à null
 		BigDecimal maxInteger = BigDecimal.ZERO;
 		BigDecimal maxFraction = BigDecimal.ZERO;
-		String maximum = "99";
-		String minimum = "-99";
+		String maximum = "";
+		String minimum = "";
 		String fraction = "";
-		String multipleOf = "0.0";
+		String multipleOf = "";
+		Integer fractionDigits = 5; // Valeur par défaut pour les chiffres fractionnaires
+		
+		if (field.hasJavaDocComment()) {
+			Javadoc javadoc = field.getJavadoc().get();
+			description = javadoc.getDescription().toText().replace("\"", "").replace(": ", "").trim();
+		}
 
 		for (AnnotationExpr annotation : field.getAnnotations()) {
 			if (annotation instanceof NormalAnnotationExpr) {
@@ -1930,7 +1964,7 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 							maxInteger = BigDecimal.TEN.pow(integerDigits).subtract(BigDecimal.ONE);
 						}
 						if ("fraction".equals(pair.getNameAsString())) {
-							int fractionDigits = Integer.parseInt(pair.getValue().toString());
+							fractionDigits = Integer.parseInt(pair.getValue().toString());
 							if (fractionDigits > 0) {
 								maxFraction = BigDecimal.TEN.pow(fractionDigits).subtract(BigDecimal.ONE);
 								fraction = ".".concat(String.valueOf(maxFraction));
@@ -1939,8 +1973,19 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 							}
 						}
 					}
-					maximum = maxInteger.toPlainString().concat(fraction);
-					minimum = "-".concat(maximum);
+					if (maxInteger.compareTo(BigDecimal.ZERO) > 0) {
+						maximum = maxInteger.toPlainString().concat(fraction);
+						minimum = "-".concat(maximum);
+					}
+				}
+				
+				// Vérifier l'annotation @Max pour le maximum
+				if ("Max".equals(normalAnnotation.getNameAsString())) {
+					for (MemberValuePair pair : normalAnnotation.getPairs()) {
+						if ("value".equals(pair.getNameAsString())) {
+							maximum = pair.getValue().toString();
+						}
+					}
 				}
 
 				// Vérifier l'annotation @ApiObjectField pour la description
@@ -1952,22 +1997,30 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 						}
 					}
 				}
-
-				if (description == null && field.hasJavaDocComment()) {
-					Javadoc javadoc = field.getJavadoc().get();
-					description = javadoc.getDescription().toText().replace("\"", "").replace(": ", "").trim();
-				}
-
 			}
+			
+			else if (annotation instanceof SingleMemberAnnotationExpr single) {
+		        if ("Max".equals(annotation.getNameAsString())) {
+					maximum = single.getMemberValue().toString();
+		        }
+		    }
 		}
 
 		switch (fieldType) {
 		case "Long":
 			swaggerProperty += "          type: integer\n          format: int64\n          description: " + description
-					+ "\n          example: 12345\n          maximum: " + maximum + "\n          minimum: " + minimum
-					+ "\n";
+			+ "\n          example: 12345\n";
+			
+			if (!maximum.equals("")) {
+				swaggerProperty += "          maximum: " + maximum + "\n";
+			} if (!minimum.equals("")) {
+				swaggerProperty += "          minimum: " + minimum + "\n";
+			}			
 			break;
-		case "Integer":
+		case "Integer", "int":
+			if (maxInteger.compareTo(BigDecimal.valueOf(9999)) > 0) {
+				maxInteger = BigDecimal.valueOf(9999);
+			}
 			Integer randomInt = ThreadLocalRandom.current().nextInt(0, maxInteger.intValue());
 			String exampleInt = randomInt.toString();
 			if (fieldName.toLowerCase().contains("month")) {
@@ -1975,9 +2028,15 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 			}if (fieldName.toLowerCase().contains("year")) {
 				exampleInt = "2025";
 			}
+			
 			swaggerProperty += "          type: integer\n          format: int32\n          description: " + description
-					+ "\n          example: " + exampleInt + "\n          maximum: " + maximum + "\n          minimum: " + minimum
-					+ "\n";
+					+ "\n          example: " + exampleInt + "\n";	
+			if (!maximum.equals("")) {
+				swaggerProperty += "          maximum: " + maximum + "\n";
+			} if (!minimum.equals("")) {
+				swaggerProperty += "          minimum: " + minimum + "\n";
+			}
+					
 			break;
 		case "Double":
 			swaggerProperty += "          type: number\n          description: " + description
@@ -1990,16 +2049,34 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
 					+ "\n          multipleOf: " + multipleOf + "\n";
 			break;
 		case "BigDecimal":
+			BigDecimal max = maximum.equals("") ? BigDecimal.valueOf(9999) : new BigDecimal(maximum);
+			BigDecimal random = new BigDecimal(Math.random()).multiply(max).setScale(fractionDigits,
+					RoundingMode.HALF_UP);
+
 			swaggerProperty += "          type: number\n          description: " + description
-					+ "\n          example: 99.99\n          maximum: " + maximum + "\n          minimum: " + minimum
-					+ "\n          multipleOf: " + multipleOf + "\n";
+					+ "\n          example: "+ random.toPlainString() + "\n";	
+			if (!maximum.equals("")) {
+				swaggerProperty += "          maximum: " + maximum + "\n";
+			} if (!minimum.equals("")) {
+				swaggerProperty += "          minimum: " + minimum + "\n";
+			} if (!multipleOf.equals("")) {
+				swaggerProperty += "          multipleOf: " + multipleOf + "\n";
+			}
 			break;
 		case "Date":
-			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00'\n          description: "
 					+ description + "\n          format: date-time\n";
 			break;
+		case "LocalDate":
+			swaggerProperty += "          type: string\n          example: '2025-03-19'\n          description: "
+					+ description + "\n          format: date\n";
+			break;
+		case "LocalTime":
+			swaggerProperty += "          type: string\n          example: '10:30:05'\n          description: "
+					+ description + "\n          format: time\n";
+			break;
 		case "LocalDateTime":
-			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00Z'\n          description: "
+			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00'\n          description: "
 					+ description + "\n          format: date-time\n";
 			break;
 		case "boolean":

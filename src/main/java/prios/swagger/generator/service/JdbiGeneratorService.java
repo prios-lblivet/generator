@@ -134,4 +134,168 @@ public class JdbiGeneratorService {
 			return "errorJava"; // Nom par défaut en cas d'erreur
 		}
 	}
+	
+	public static String convertDoubleSettersToBigDecimal(String input) {
+	    StringBuilder result = new StringBuilder();
+
+	    String[] lines = input.split("\\n");
+
+	    for (String line : lines) {
+	        String trimmed = line.trim();
+
+	        // détecte setXXX(123.456);
+	        if (trimmed.matches(".*set\\w+\\(\\d+\\.\\d+\\);")) {
+
+	            int start = trimmed.indexOf('(') + 1;
+	            int end = trimmed.indexOf(')');
+
+	            String value = trimmed.substring(start, end);
+
+	            // remplace par BigDecimal
+	            String newLine = trimmed.substring(0, start)
+	                    + "new BigDecimal(\"" + value + "\")"
+	                    + trimmed.substring(end);
+
+	            result.append(newLine).append("\n");
+	        } else {
+	            // ne touche pas aux autres (int, etc.)
+	            result.append(trimmed).append("\n");
+	        }
+	    }
+
+	    return result.toString();
+	}
+	
+	private static String safe(String[] c, int i) {
+	    return (i >= 0 && i < c.length) ? c[i] : "";
+	}
+
+	private static String buildInsert(String[] c) {
+
+	    String[] v = new String[60];
+
+	    for (int i = 0; i < v.length; i++) {
+	        v[i] = safe(c, i);
+	    }
+
+	    return "INSERT INTO DCL.VODLENP VALUES (" +
+
+	            parseString(v[0]) + ", " +   // YAROSUPENR
+	            parseInt(v[1]) + ", " +
+	            parseInt(v[2]) + ", " +
+	            parseInt(v[3]) + ", " +
+	            parseInt(v[4]) + ", " +
+	            parseInt(v[5]) + ", " +
+	            parseInt(v[6]) + ", " +
+	            parseInt(v[7]) + ", " +
+	            parseInt(v[8]) + ", " +
+	            parseInt(v[9]) + ", " +
+
+	            parseInt(v[10]) + ", " +
+	            parseInt(v[11]) + ", " +
+	            parseInt(v[12]) + ", " +
+
+	            parseDate(v[13]) + ", " +
+	            parseDate(v[14]) + ", " +
+	            parseInt(v[15]) + ", " +
+	            parseDate(v[16]) + ", " +
+
+	            parseInt(v[17]) + ", " +
+	            quote(v[18]) + ", " +
+	            quote(v[19]) + ", " +
+	            parseInt(v[20]) + ", " +
+
+	            parseDate(v[21]) + ", " +
+	            parseTime(v[22]) + ", " +
+	            quote(v[23]) + ", " +
+
+	            parseDate(v[24]) + ", " +
+	            parseTime(v[25]) + ", " +
+	            parseDate(v[26]) + ", " +
+	            parseTime(v[27]) + ", " +
+
+	            parseInt(v[28]) + ", " +
+	            parseInt(v[29]) + ", " +
+	            parseInt(v[30]) + ", " +
+	            parseInt(v[31]) + ", " +
+
+	            quote(v[32]) + ", " +
+	            quote(v[33]) + ", " +
+	            quote(v[34]) + ", " +
+	            quote(v[35]) + ", " +
+	            quote(v[36]) + ", " +
+	            quote(v[37]) + ", " +
+	            quote(v[38]) + ", " +
+
+	            quote(v[39]) + ", " +
+	            quote(v[40]) + ", " +
+	            quote(v[41]) + ", " +
+	            quote(v[42]) + ", " +
+	            quote(v[43]) + ", " +
+	            quote(v[44]) + ", " +
+	            quote(v[45]) + ", " +
+
+	            parseDate(v[46]) + ", " +
+	            parseTime(v[47]) + ", " +
+	            quote(v[48]) + ", " +
+	            quote(v[49]) + ", " +
+	            parseDate(v[50]) + ", " +
+	            parseTime(v[51]) + ", " +
+	            quote(v[52]) + ", " +
+	            quote(v[53]) + ", " +
+
+	            parseDateTime(v[54]) + ", " +
+	            parseDateTime(v[55]) +
+
+	            ");";
+	}
+
+	private static String parseString(String s) {
+	    return (s == null || s.isEmpty()) ? "" : "'" + s + "'";
+	}
+	
+	public static String generateSQL(String input) {
+
+        StringBuilder result = new StringBuilder();
+
+        String[] lines = input.split("\\r?\\n");
+
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+
+            String[] cols = line.split("\t", -1);
+
+            result.append(buildInsert(cols)).append("\n");
+        }
+
+        return result.toString();
+    }
+
+	
+    // ==========================
+    // 🛠️ Helpers
+    // ==========================
+
+    private static String parseInt(String s) {
+        return (s == null || s.isEmpty()) ? "0" : s;
+    }
+
+    private static String quote(String s) {
+        return "'" + s + "'";
+    }
+
+    private static String parseDate(String s) {
+        if (s == null || s.length() != 8) return "0";
+        return s;
+    }
+
+    private static String parseTime(String s) {
+        if (s == null || s.length() != 6) return "0";
+        return s;
+    }
+
+    private static String parseDateTime(String s) {
+        if (s == null || s.isEmpty()) return "NULL";
+        return "'" + s + "'";
+    }
 }

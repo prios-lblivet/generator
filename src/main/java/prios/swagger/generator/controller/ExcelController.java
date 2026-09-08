@@ -29,7 +29,8 @@ class ExcelController {
     	
         String javaClassContent = request.get("classContent");
         String javaTableContent = request.get("tableContent");
-	    
+
+        //return excelGeneratorService.generateInsertSQL(javaClassContent, javaTableContent);
 	    return excelGeneratorService.generate(javaClassContent, javaTableContent);
 	}
 }

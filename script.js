@@ -123,10 +123,6 @@ function generateExcel() {
 	}
 
 	let tableContent = document.getElementById("excelJavaTableInput").value;
-	if (!tableContent.trim()) {
-		alert("Veuillez coller votre table.");
-		return;
-	}
 
 	// Afficher le loader avant l'appel à fetch
 	document.getElementById("loadingExcel").style.display = "block";
@@ -215,6 +211,98 @@ function generateJdbi() {
 				document.getElementById("statusJdbi").style.color = "red";
 				document.getElementById("loadingJdbi").style.display = "none"; // Masquer le loader en cas d'erreur
 			});
+}
+
+function searchError() {
+	let logContent = document.getElementById("errorLogInput").value;
+	if (!logContent.trim()) {
+		alert("Veuillez coller les log");
+		return;
+	}
+
+	let tableContent = document.getElementById("errorTableInput").value;
+
+	// Afficher le loader avant l'appel à fetch
+	document.getElementById("loadingError").style.display = "block";
+	document.getElementById("statusError").textContent = ""; // Effacer tout message précédent
+
+	fetch("http://localhost:8091/api/error/generate", {
+	        method: "POST",
+	        headers: {
+				"Content-Type": "application/json"
+			},	            
+        	body: JSON.stringify({
+           		logContent: logContent,
+           		tableContent: tableContent
+           		})
+	        })
+	        .then(response => {
+	            if (response.ok) {
+	                return response.json(); // Lire la réponse JSON
+	            }
+	            return response.json().then(err => { // Lire l'erreur envoyée par le serveur
+	                throw new Error(err.error || 'Erreur lors de la génération');
+	            });
+	        })
+			.then(data => {
+
+			    console.log("DATA :", data);
+			    console.log("EST UN TABLEAU :", Array.isArray(data));
+
+			    if (!Array.isArray(data)) {
+			        throw new Error("La réponse reçue n'est pas une liste");
+			    }
+
+			    if (data.length === 0) {
+			        document.getElementById("error_result").innerHTML =
+			            "<p style='color:green'>✅ Aucune erreur détectée</p>";
+			        return;
+			    }
+
+			    let html = `
+			        <table>
+			            <thead>
+			                <tr>
+			                    <th>Colonne</th>
+			                    <th>Valeur</th>
+			                    <th>Type SQL</th>
+			                    <th>Taille max</th>
+			                    <th>Longueur réelle</th>
+			                </tr>
+			            </thead>
+			            <tbody>
+			    `;
+
+			    data.forEach(d => {
+
+			        html += `
+			            <tr>
+			                <td><strong>${d.column}</strong></td>
+			                <td>${d.value}</td>
+			                <td>${d.dataType}</td>
+			                <td>${d.nbCharactersMax}${d.nbCharactersMaxDecimal > 0 ? "," + d.nbCharactersMaxDecimal : ""}</td>
+			                <td>${d.value.length}</td>
+			            </tr>
+			        `;
+			    });
+
+			    html += `
+			            </tbody>
+			        </table>
+			    `;
+
+			    document.getElementById("error_result").innerHTML = html;
+				document.getElementById("loadingError").style.display = "none";
+				document.getElementById("statusError").textContent = "✅ Recherche d'erreur terminée";
+				document.getElementById("statusError").style.color = "green";
+				document.querySelector(".tab[onclick*='error_result']").click();
+			})
+	        .catch(error => {
+				console.error("Erreur : " + error.message);
+	            document.getElementById("statusError").textContent = "❌ Erreur : " + error.message;
+	            document.getElementById("statusError").style.color = "red";
+	            document.getElementById("loadingError").style.display = "none"; // Masquer le loader en cas d'erreur
+	        });
 }
 
 
@@ -530,4 +618,23 @@ function copyToClipboard(elementId, button) {
       button.disabled = false;
     }, 2000);
   });
+}
+
+function copyHibernateProperties() {
+    const text = document.getElementById("hibernateProperties").textContent;
+    const button = document.querySelector(".copy-button");
+
+    navigator.clipboard.writeText(text).then(() => {
+        button.textContent = "Copié";
+
+        setTimeout(() => {
+            button.textContent = "Copier";
+        }, 1500);
+    }).catch(() => {
+        button.textContent = "Erreur";
+
+        setTimeout(() => {
+            button.textContent = "Copier";
+        }, 1500);
+    });
 }
