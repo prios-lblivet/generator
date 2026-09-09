@@ -2,6 +2,7 @@ package prios.swagger.generator.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Month;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -1826,10 +1827,17 @@ private Map<String, String> generateSetter(FieldDeclaration field, String classN
             	if (fieldName.toLowerCase().contains("end")) {
             		yearLocal = 2026;
             	}
-            	int monthLocal = ThreadLocalRandom.current().nextInt(1, 13);
+				Month monthLocal = Month.values()[ThreadLocalRandom.current().nextInt(Month.values().length)];
             	int dayLocal = ThreadLocalRandom.current().nextInt(1, 28);
-            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", " + monthLocal + ", " + dayLocal + "));\n";
-            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", " + monthLocal + ", " + dayLocal + "));\n";
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", Month." + monthLocal.name() + ", " + dayLocal + "));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalDate.of(" + yearLocal + ", Month." + monthLocal.name() + ", " + dayLocal + "));\n";
+                break;
+            case "LocalTime":
+            	int hour = ThreadLocalRandom.current().nextInt(1, 24);
+            	int min = ThreadLocalRandom.current().nextInt(1, 60);
+            	int second = ThreadLocalRandom.current().nextInt(1, 60);
+            	entity += "		" + className + number + ".set" + capitalizedFieldName + "(LocalTime.of(" + hour + ", " + min + ", " + second + "));\n";
+            	dto += "		" + className + "Dto" + number + ".set" + capitalizedFieldName + "(LocalTime.of(" + hour + ", " + min + ", " + second + "));\n";
                 break;
             case "LocalDateTime":
             	int year = 2025;

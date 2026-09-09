@@ -285,6 +285,10 @@ public class SwaggerGeneratorService {
 			swaggerProperty += "          type: string\n          example: '2025-03-19'\n          description: "
 					+ description + "\n          format: date\n";
 			break;
+		case "LocalTime":
+			swaggerProperty += "          type: string\n          example: '10:30:05'\n          description: "
+					+ description + "\n          format: time\n";
+			break;
 		case "LocalDateTime":
 			swaggerProperty += "          type: string\n          example: '2025-03-19T10:00:00'\n          description: "
 					+ description + "\n          format: date-time\n";

@@ -638,6 +638,10 @@
 		        transform: translateY(0);
 		    }
 		}
+		
+		.text-left {
+            text-align: left;
+        }
 	</style>
 </head>
 
@@ -1059,16 +1063,59 @@ logging.file.name=logs/api.log</pre>
 			<div class="tabs">
 				<div class="tab active" onclick="openTab(event, 'error_import')">Import</div>
 				<div class="tab" onclick="openTab(event, 'error_result')">Résultat</div>
-
 			</div>
-
 			<div class="height">
 				<div class="container-flex">
 					<div id="error_import" class="tab-content active">
 						<div class="api-import">
-							<textarea id="errorLogInput" placeholder="Collez ici les logs..."></textarea>
-							<textarea id="errorTableInput"
-								placeholder="Collez ici la creation bdd de la table..."></textarea>
+							<textarea id="errorLogInput" class="text-left"
+								placeholder="Collez ici les logs ex : 
+
+2026-09-02T15:57:52.314+02:00 DEBUG 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.SQL                        : insert into BIXTIEP (LWACITFTIE,LWCDSOCTIE,LWCDETBTIE,LWCDITFTIE,LWDTCRTTIE,LWDTTRTTIE,LWNXEVOTIE,LWNMSOCTIE,LWNMETBTIE,LWFLTRTTIE,LWNUEVOTIE,LWPGCRTTIE,LWHECRTTIE,LWHETRTTIE,LWUTCRTTIE,LWA2TIE,LWA3TIE) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+2026-09-02T15:57:52.319+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [C]
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- []
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- []
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [CAFRTIE]
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (5:INTEGER) <- [20260902]
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (6:INTEGER) <- [0]
+2026-09-02T15:57:52.320+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (7:VARCHAR) <- [CAFELLIST]
+2026-09-02T15:57:52.321+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (12:VARCHAR) <- [api-a-thir]
+2026-09-02T15:57:52.322+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (13:INTEGER) <- [155752]
+2026-09-02T15:57:52.326+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (44:VARCHAR) <- [CLT]
+2026-09-02T15:57:52.328+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (61:VARCHAR) <- [06-06-06-06-06]
+2026-09-02T15:57:52.328+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (62:VARCHAR) <- [72540]
+2026-09-02T15:57:52.333+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (104:VARCHAR) <- []
+2026-09-02T15:57:52.333+02:00 TRACE 30556 --- [api-a-third] [http-nio-18340-exec-1] org.hibernate.orm.jdbc.bind              : binding parameter (111:VARCHAR) <- [0TEST]
+2026-09-02T15:57:52.405+02:00  WARN 30556 --- [api-a-third] [http-nio-18340-exec-1] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 8152, SQLState: 22001
+2026-09-02T15:57:52.405+02:00 ERROR 30556 --- [api-a-third] [http-nio-18340-exec-1] o.h.engine.jdbc.spi.SqlExceptionHelper   : Les données de chaîne ou binaires seront tronquées."></textarea>
+							<textarea id="errorTableInput" class="text-left" placeholder="Collez ici la creation bdd de la table ex : 
+
+CREATE TABLE [DCL].[BIXTIEP](
+	[LWICATO] [numeric](15, 0) IDENTITY(1,1) NOT NULL,
+	[LWFLTRTTIE] [varchar](1) NOT NULL,
+	[LWDTCRTTIE] [numeric](8, 0) NOT NULL,
+	[LWHECRTTIE] [numeric](6, 0) NOT NULL,
+	[LWPGCRTTIE] [varchar](10) NOT NULL,
+	[LWUTCRTTIE] [varchar](10) NOT NULL,
+	[LWNUEVOTIE] [varchar](10) NOT NULL,
+	[LWNXEVOTIE] [varchar](10) NOT NULL,
+	[LWNUUNITIE] [numeric](10, 0) NOT NULL,
+	[LWDTTRTTIE] [numeric](8, 0) NOT NULL,
+	[LWHETRTTIE] [numeric](6, 0) NOT NULL,
+	[LWLBTRTTIE] [varchar](60) NOT NULL,
+	[LWCDITFTIE] [varchar](10) NOT NULL,
+	[LWACITFTIE] [varchar](1) NOT NULL,
+	[LWCDSOCTIE] [varchar](3) NOT NULL,
+	[LWNMSOCTIE] [varchar](40) NOT NULL,
+	[LWCDETBTIE] [varchar](3) NOT NULL
+PRIMARY KEY CLUSTERED 
+(
+	[LWICATO] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+							"></textarea>
 						</div>
 						<div class="buttons">
 							<button id="searchError" class="button" onclick="searchError()">🚀 Recherche
